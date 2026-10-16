@@ -1,0 +1,208 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+@keyframes gradient-x {
+  0%,
+  100% {
+    background-size: 200% 200%;
+    background-position: left center;
+  }
+  50% {
+    background-position: right center;
+  }
+}
+
+.animate-gradient-x {
+  animation: gradient-x 4s ease infinite;
+}
+
+/* .hero-bg {
+    background: url('../src/assets/hero.png');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+} */
+
+@theme {
+  --animate-blob: blob 14s ease-in-out infinite;
+  --animate-grid-drift: grid-drift 8s linear infinite;
+  --animate-beam: beam 12s ease-in-out infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-wave: wave 2.5s ease-in-out 1s 2;
+  @keyframes blob {
+    0%,
+    100% {
+      transform: translate(0, 0) scale(1);
+    }
+    33% {
+      transform: translate(40px, -50px) scale(1.15);
+    }
+    66% {
+      transform: translate(-30px, 30px) scale(0.9);
+    }
+  }
+  @keyframes grid-drift {
+    0% {
+      background-position: 0 0;
+    }
+    100% {
+      background-position: 48px 48px;
+    }
+  }
+  @keyframes beam {
+    0% {
+      transform: translateX(0) skewX(-12deg);
+    }
+    100% {
+      transform: translateX(400%) skewX(-12deg);
+    }
+  }
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+      opacity: 0.4;
+    }
+    50% {
+      transform: translateY(-18px);
+      opacity: 1;
+    }
+  }
+  @keyframes wave {
+    0%,
+    60%,
+    100% {
+      transform: rotate(0deg);
+    }
+    10%,
+    30% {
+      transform: rotate(14deg);
+    }
+    20% {
+      transform: rotate(-8deg);
+    }
+    40% {
+      transform: rotate(-4deg);
+    }
+    50% {
+      transform: rotate(10deg);
+    }
+  }
+}
+
+/* ==== dark mode styles ==== */
+
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  transition:
+    background-color 500ms ease-in-out,
+    color 500ms ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body {
+    transition: none;
+  }
+}
+
+@keyframes theme-icon {
+  from {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-theme-icon {
+  animation: theme-icon 0.35s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-theme-icon {
+    animation: none;
+  }
+}
+
+/* Not found css */
+
+.nf-bang {
+  transform-origin: center bottom;
+  animation: nf-bang 1.8s ease-in-out infinite;
+}
+
+@keyframes nf-bang {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-4px) rotate(12deg);
+  }
+  50% {
+    transform: translateY(0) rotate(-8deg);
+  }
+  75% {
+    transform: translateY(-2px) rotate(5deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nf-bang {
+    animation: none;
+  }
+}
+
+/* Global smooth scrolling */
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 90px;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar */
+
+::-webkit-scrollbar {
+  width: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2a7fa3;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #87c9e6;
+}
+
+/* Firefox */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2a7fa3 transparent;
+}
+
+/* Respect accessibility settings */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
