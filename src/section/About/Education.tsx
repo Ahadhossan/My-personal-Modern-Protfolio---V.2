@@ -174,7 +174,7 @@ export default function Education() {
         </div>
 
         {/* Responsive layout: 1 column → 2 columns → staircase */}
-        <ol className="grid items-end gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+        <ol className="grid items-end gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 cursor-pointer">
           {STEPS.map((s, i) => {
             const Icon = s.icon;
             const f = !!s.featured;

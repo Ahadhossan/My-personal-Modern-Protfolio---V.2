@@ -198,7 +198,7 @@ const SocialButton = ({
       target={external ? "_blank" : undefined}
       rel={external ? "noreferrer" : undefined}
       style={{ "--c": s.color } as CSSProperties}
-      className={`lt-social relative flex items-center justify-center border border-black/10 bg-white/70 text-neutral-700 backdrop-blur dark:border-white/10 dark:bg-white/[0.05] dark:text-white/80 ${s.round} ${size}`}
+      className={`lt-social relative flex items-center justify-center border border-black/10 bg-white text-neutral-700 backdrop-blur dark:border-white/10 dark:bg-black/10 dark:text-white/80 ${s.round} ${size}`}
     >
       {/* soft ripple ring (border only, no shadow) */}
       <span
@@ -237,7 +237,7 @@ const LetsTalk = () => {
       ref={ref}
       onMouseMove={handleMove}
       onMouseLeave={handleLeave}
-      className="isolate overflow-hidden px-5 py-16 text-neutral-900 relative bg-white transition-colors duration-300 dark:bg-[#050505] dark:text-white sm:px-6 sm:py-24 md:px-10 md:py-30"
+      className="isolate overflow-hidden px-5 py-16 text-neutral-900 relative bg-white transition-colors duration-300 dark:bg-[#050505] dark:text-white sm:px-6 sm:py-24 md:px-10 md:py-30 mx-auto border-t border-[#0E1525]/10 dark:border-white/10"
     >
       {/* Custom CSS (plain CSS so hover works on every device) */}
       <style>{`
@@ -318,13 +318,13 @@ const LetsTalk = () => {
       {/* Grid background (fades out toward the edges) */}
       <div
         aria-hidden
-        className="absolute inset-0 -z-10 opacity-[0.12] dark:opacity-[0.08] [background-image:linear-gradient(#2a7fa3_1px,transparent_1px),linear-gradient(90deg,#2a7fa3_1px,transparent_1px)] [background-size:64px_64px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]"
+        className="absolute inset-0 -z-10 opacity-[0.12] dark:opacity-[0.08] bg-[linear-gradient(#2a7fa3_1px,transparent_1px),linear-gradient(90deg,#2a7fa3_1px,transparent_1px)] bg-size-[64px_64px] mask-[radial-gradient(ellipse_at_center,black,transparent_75%)]"
       />
 
       {/* Center glow (slow breathing) */}
       <div
         aria-hidden
-        className="absolute left-1/2 top-1/3 -z-10 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-[#2a7fa3]/25 blur-[120px] motion-safe:animate-pulse dark:bg-[#2a7fa3]/35 sm:h-[560px] sm:w-[560px]"
+        className="absolute left-1/2 top-1/3 -z-10 h-105 w-105 -translate-x-1/2 rounded-full bg-[#2a7fa3]/25 blur-[120px] motion-safe:animate-pulse dark:bg-[#2a7fa3]/35 sm:h-140 sm:w-140"
         style={{ animationDuration: "6s" }}
       />
 

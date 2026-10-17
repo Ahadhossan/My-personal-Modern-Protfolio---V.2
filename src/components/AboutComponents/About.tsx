@@ -2,14 +2,14 @@ import React from "react";
 import AboutHero from "../../section/About/AboutHero";
 import Education from "../../section/About/Education";
 import LetsTalk from "../../common/LetsTalk";
-// import CareerTarget from "../../TestFile/CareerTarget";
+import CareerTarget from "../../common/CareerTarget";
 
 const About: React.FC = () => {
   return (
     <div>
       <AboutHero />
       <Education />
-      {/* <CareerTarget /> */}
+      <CareerTarget />
       <LetsTalk />
     </div>
   );
