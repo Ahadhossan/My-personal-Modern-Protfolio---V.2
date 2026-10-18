@@ -19,6 +19,8 @@ import { useNavHeight } from "./hooks/useNavHeight";
 
 import NotFound from "./common/NotFound";
 import ScrollProgress from "./common/ScrollProgress";
+import Projects from "./components/ProjectComponents/Projects";
+import Articles from "./components/ArticleComponents/Articles";
 
 // ========================================
 // MAIN LAYOUT
@@ -97,6 +99,8 @@ function App(): JSX.Element {
             <Route path="/about" element={<About />} />
             <Route path="/experience" element={<Experience />} />
             <Route path="/skills" element={<Skills />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/articles" element={<Articles />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/workwithme" element={<WorkWithMe />} />
           </Route>
