@@ -26,22 +26,28 @@ export const Menus: MenuType[] = [
 
   // ABOUT
   {
-    name: "About Me",
+    name: "About",
     path: "/about",
+  },
+
+  // ABOUT
+  {
+    name: "Career Journey",
+    path: "/Experience",
     gridCols: 1,
     subMenu: [
       [
         {
-          label: "About Me",
-          href: "/about",
+          label: "Experience",
+          href: "/experience",
         },
         // {
         //   label: "Success Stories",
         //   href: "/success",
         // },
         {
-          label: "Experience",
-          href: "/experience",
+          label: "Certificate & Award",
+          href: "/certificate",
         },
       ],
     ],

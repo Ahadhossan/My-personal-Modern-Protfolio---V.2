@@ -19,7 +19,7 @@ import {
   Wind,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import image1 from "../assets/About.jpeg";
+import image1 from "../../assets/About.jpeg";
 
 /* ---------- Types ---------- */
 export interface Project {

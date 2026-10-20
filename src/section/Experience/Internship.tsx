@@ -156,7 +156,7 @@ const TimelineItem: React.FC<{ job: Job; index: number; isLast: boolean }> = ({
           className="absolute -bottom-5 left-1.5 top-8 w-0.5 -translate-x-1/2 overflow-hidden rounded-full bg-[#42464e]/15 dark:bg-white/15 sm:-bottom-6 sm:top-9"
         >
           <span
-            className="absolute inset-0 origin-top rounded-full bg-gradient-to-b from-[#2a7fa3] to-[#8fc4dc] transition-transform duration-150 ease-out will-change-transform motion-reduce:transition-none dark:from-[#5bb8e0] dark:to-[#2a7fa3]"
+            className="absolute inset-0 origin-top rounded-full bg-linear-to-b from-[#2a7fa3] to-[#8fc4dc] transition-transform duration-150 ease-out will-change-transform motion-reduce:transition-none dark:from-[#5bb8e0] dark:to-[#2a7fa3]"
             style={{ transform: `scaleY(${progress})` }}
           />
         </span>
@@ -181,8 +181,7 @@ const TimelineItem: React.FC<{ job: Job; index: number; isLast: boolean }> = ({
       {/* Content */}
       <div
         className="relative min-w-0 overflow-hidden rounded-xl border border-[#42464e]/40 bg-white/70 px-4 py-4 shadow-[0_8px_24px_-12px_rgba(14,21,37,0.15)] backdrop-blur-sm
-  transition-all duration-300
-   group-hover:bg-[#2a7fa3]/[0.06] group-hover:shadow-[0_16px_40px_-12px_rgba(42,127,163,0.35)]
+  transition-all duration-300 group-hover:bg-[#2a7fa3]/[0.06] group-hover:shadow-[0_16px_40px_-12px_rgba(42,127,163,0.35)]
   dark:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)]
  dark:group-hover:bg-[#5bb8e0]/10 dark:group-hover:shadow-[0_16px_40px_-12px_rgba(91,184,224,0.25)]
   sm:px-6 sm:py-5 [@media(hover:hover)]:group-hover:-translate-y-0.5 hover:border-[#15919B]

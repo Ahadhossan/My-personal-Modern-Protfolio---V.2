@@ -1,4 +1,4 @@
-import ProjectsPage from "../ProjectsPage";
+import ProjectsPage from "../../section/Projects/ProjectsPage";
 
 const Projects = () => {
   return (

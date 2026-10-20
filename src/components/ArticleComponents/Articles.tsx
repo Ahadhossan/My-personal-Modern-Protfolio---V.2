@@ -1,4 +1,4 @@
-import ArticlesPage from "../ArticlesPage";
+import ArticlesPage from "../../section/Articles/ArticlesPage";
 
 const Articles = () => {
   return (
