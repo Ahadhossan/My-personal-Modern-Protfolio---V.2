@@ -21,6 +21,9 @@ import NotFound from "./common/NotFound";
 import ScrollProgress from "./common/ScrollProgress";
 import Projects from "./components/ProjectComponents/Projects";
 import Articles from "./components/ArticleComponents/Articles";
+import CertificateAward from "./components/CertificateAwardComponents/CertificateAward";
+import CertificatesPage from "./section/CertificateAward/CertificatesPage";
+import AwardsPage from "./section/CertificateAward/AwardsPage";
 
 // ========================================
 // MAIN LAYOUT
@@ -101,6 +104,9 @@ function App(): JSX.Element {
             <Route path="/skills" element={<Skills />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/articles" element={<Articles />} />
+            <Route path="/certificate" element={<CertificateAward />} />
+            <Route path="/certificates" element={<CertificatesPage />} />
+            <Route path="/awards" element={<AwardsPage />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/workwithme" element={<WorkWithMe />} />
           </Route>
