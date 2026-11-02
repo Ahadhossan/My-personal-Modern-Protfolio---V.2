@@ -117,23 +117,23 @@ const StatCard: React.FC<{ item: StatItem; index: number }> = ({
       }}
       onMouseMove={onMove}
       className="
-        group relative isolate cursor-pointer overflow-hidden rounded-3xl
-        border border-slate-200 bg-white p-6
+        group relative isolate cursor-pointer overflow-hidden rounded-2xl
+        border border-[#0E1525]/15 bg-white p-6
         shadow-[0_1px_2px_rgba(15,23,42,0.04),0_16px_40px_-20px_rgba(15,23,42,0.15)]
 
         transition-all duration-300
-          hover:-translate-y-1 hover:border-[#15919B]/40
+          hover:-translate-y-1 hover:border-[#15919B]
         hover:shadow-[0_1px_2px_rgba(15,23,42,0.04),0_24px_48px_-20px_rgba(21,145,155,0.3)]
 
-        dark:border-slate-700/70 dark:bg-slate-900
+        dark:border-white/10 dark:bg-slate-900
         dark:shadow-[0_12px_35px_-20px_rgba(0,0,0,0.6)]
-        dark:hover:border-[#15919B]/60
+        dark:hover:border-[#15919B]
         dark:hover:shadow-[0_24px_48px_-20px_rgba(21,145,155,0.2)]
         sm:p-8
       "
     >
       {/* Cursor Spotlight */}
-      <div
+      {/* <div
         className="
           pointer-events-none absolute -inset-px -z-10
           opacity-0 transition-opacity duration-300 ease-in-out
@@ -143,7 +143,7 @@ const StatCard: React.FC<{ item: StatItem; index: number }> = ({
           background:
             "radial-gradient(320px circle at var(--x, 50%) var(--y, 50%), rgba(21,145,155,0.19), transparent 70%)",
         }}
-      />
+      /> */}
 
       {/* Icon */}
       <div className="flex items-start justify-between">
@@ -184,6 +184,14 @@ const StatCard: React.FC<{ item: StatItem; index: number }> = ({
       <p className="mt-2 text-[16px] leading-relaxed= text-gray-600 transition-colors duration-300 dark:text-slate-400 sm:text-[17px]">
         {item.hint}
       </p>
+      {/* Bottom hover accent */}
+      <span
+        className="
+            absolute bottom-0 left-0 h-[2px] w-0
+            bg-[#15919B] transition-all duration-300
+            group-hover:w-full
+          "
+      />
     </motion.div>
   );
 };

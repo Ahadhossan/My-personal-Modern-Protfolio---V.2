@@ -149,7 +149,7 @@ export default function Education() {
   return (
     <section
       id="education"
-      className="relative isolate overflow-hidden bg-white text-[#0E1525] transition-colors duration-300 dark:bg-[#050505] dark:text-slate-100"
+      className="relative isolate overflow-hidden bg-white transition-colors duration-300 dark:bg-[#050505] "
     >
       <div className="mx-auto max-w-7xl border-t border-[#0E1525]/10 transition-colors duration-300 dark:border-white/10 px-5 py-20  sm:px-6 sm:py-24 md:px-10 md:py-30">
         {/* Heading + illustration */}
@@ -196,11 +196,11 @@ export default function Education() {
                   ${
                     f
                       ? "border-[#2a7fa3]/40 bg-gradient-to-br from-[#102632] via-[#0b1722] to-[#080d14] text-white shadow-[0_16px_45px_-15px_rgba(42,127,163,0.28)] hover:border-[#38bdf8]/60 hover:shadow-[0_20px_55px_-15px_rgba(42,127,163,0.38)]"
-                      : "border-[#0E1525]/10 bg-white text-[#0E1525] shadow-[0_8px_24px_-12px_rgba(14,21,37,0.15)] hover:border-[#15919B]/60 hover:shadow-[0_16px_40px_-12px_rgba(42,127,163,0.25)] dark:border-white/[0.09] dark:bg-gradient-to-br dark:from-[#111c27] dark:via-[#0b121b] dark:to-[#090d13] dark:text-slate-100 dark:shadow-[0_10px_35px_-18px_rgba(0,0,0,0.8)] dark:hover:border-[#38bdf8]/45 dark:hover:shadow-[0_18px_45px_-15px_rgba(42,127,163,0.2)]"
+                      : "border-[#0E1525]/10 bg-white text-[#0E1525] shadow-[0_8px_24px_-12px_rgba(14,21,37,0.15)] hover:border-[#15919B] hover:shadow-[0_16px_40px_-12px_rgba(42,127,163,0.25)] dark:border-white/[0.09] dark:bg-gradient-to-br dark:from-[#111c27] dark:via-[#0b121b] dark:to-[#090d13] dark:text-slate-100 dark:shadow-[0_10px_35px_-18px_rgba(0,0,0,0.8)] dark:hover:border-[#15919B] dark:hover:shadow-[0_18px_45px_-15px_rgba(42,127,163,0.2)]"
                   }`}
               >
                 {/* Cursor-following spotlight */}
-                <div
+                {/* <div
                   aria-hidden="true"
                   className="pointer-events-none absolute inset-0 -z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
                   style={{
@@ -208,7 +208,7 @@ export default function Education() {
                       ? "radial-gradient(320px circle at var(--x, 50%) var(--y, 50%), rgba(42,127,163,0.35), transparent 70%)"
                       : "radial-gradient(320px circle at var(--x, 50%) var(--y, 50%), rgba(21,145,155,0.19), transparent 70%)",
                   }}
-                />
+                /> */}
 
                 {/* Accent glow */}
                 <span

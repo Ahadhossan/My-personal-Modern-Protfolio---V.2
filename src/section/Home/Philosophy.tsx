@@ -68,9 +68,9 @@ const Philosophy = () => {
             </h2>
 
             {/* Accent Line */}
-            <div className="mt-4 flex items-start gap-1.5" aria-hidden="true">
-              <span className="block h-[3px] w-[120px] rounded-sm bg-gradient-to-r from-[#8fc4dc] to-[#487081] dark:from-teal-300 dark:to-cyan-500" />
-              <span className="block h-1.5 w-1.5 rounded-full bg-[#2a7fa3] dark:bg-teal-300" />
+            <div className="mt-4 flex items-start justify-start gap-1.5">
+              <i className="block h-[3px] w-[120px] rounded-sm bg-gradient-to-r from-[#8fc4dc] to-[#487081] dark:from-[#5bb8e0] dark:to-[#2a7fa3]" />
+              <b className="h-1.5 w-1.5 rounded-full bg-[#2a7fa3] dark:bg-[#5bb8e0]" />
             </div>
 
             {/* Introduction */}
@@ -98,12 +98,12 @@ const Philosophy = () => {
                   border border-[#0E1525]/15 bg-white p-6
                   transition-all duration-300
           hover:-translate-y-1 hover:border-[#15919B]
-                  dark:border-white/10 dark:bg-slate-900/70
-                  dark:hover:border-teal-400/70 cursor-pointer
+                  dark:border-white/10 dark:bg-slate-900
+                  dark:hover:border-[#15919B] cursor-pointer hover:shadow-[0_1px_2px_rgba(15,23,42,0.04),0_24px_48px_-20px_rgba(21,145,155,0.3)] dark:hover:shadow-[0_24px_48px_-20px_rgba(21,145,155,0.2)]
                 "
               >
                 {/* Cursor-following spotlight */}
-                <div
+                {/* <div
                   aria-hidden="true"
                   className="
                     pointer-events-none absolute inset-0 -z-10
@@ -114,7 +114,7 @@ const Philosophy = () => {
                     background:
                       "radial-gradient(320px circle at var(--x, 50%) var(--y, 50%), rgba(21,145,155,0.14), transparent 70%)",
                   }}
-                />
+                /> */}
 
                 {/* Card Icon */}
                 <div
@@ -140,6 +140,14 @@ const Philosophy = () => {
                 <p className="mt-2 text-[16px] leading-relaxed= text-gray-600 transition-colors duration-300 dark:text-slate-400 sm:text-[17px]">
                   {description}
                 </p>
+                {/* Bottom hover accent */}
+                <span
+                  className="
+            absolute bottom-0 left-0 h-[2px] w-0
+            bg-[#15919B] transition-all duration-300
+            group-hover:w-full
+          "
+                />
               </div>
             ))}
           </div>

@@ -33,7 +33,7 @@ export const Menus: MenuType[] = [
   // ABOUT
   {
     name: "Career Journey",
-    path: "/Experience",
+    path: "#",
     gridCols: 1,
     subMenu: [
       [

@@ -5316,7 +5316,6 @@ import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 
 import {
-  ArrowRight,
   Award,
   Calendar,
   ChevronLeft,
