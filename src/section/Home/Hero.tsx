@@ -640,7 +640,7 @@ const Hero: React.FC = () => {
 
               {/* PDF */}
               <iframe
-                src="/resume.pdf"
+                src="/src/assets/Ahad hossain Resume.pdf"
                 className="h-full w-full"
                 title="Resume PDF"
               />

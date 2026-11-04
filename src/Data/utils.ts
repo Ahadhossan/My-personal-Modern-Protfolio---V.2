@@ -30,28 +30,34 @@ export const Menus: MenuType[] = [
     path: "/about",
   },
 
-  // ABOUT
+  // Experience
   {
-    name: "Career Journey",
-    path: "#",
-    gridCols: 1,
-    subMenu: [
-      [
-        {
-          label: "Experience",
-          href: "/experience",
-        },
-        // {
-        //   label: "Success Stories",
-        //   href: "/success",
-        // },
-        {
-          label: "Certificate & Award",
-          href: "/certificate",
-        },
-      ],
-    ],
+    name: "Experience",
+    path: "/experience",
   },
+
+  // Career Journey
+  // {
+  //   name: "Career Journey",
+  //   path: "#",
+  //   gridCols: 1,
+  //   subMenu: [
+  //     [
+  //       {
+  //         label: "Experience",
+  //         href: "/experience",
+  //       },
+  //       // {
+  //       //   label: "Success Stories",
+  //       //   href: "/success",
+  //       // },
+  //       {
+  //         label: "Certificate & Award",
+  //         href: "/certificate",
+  //       },
+  //     ],
+  //   ],
+  // },
 
   // SERVICES
   // {
