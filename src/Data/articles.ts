@@ -31,7 +31,6 @@ export interface Article {
   url: string;
   image: string;
   featured?: boolean;
-
   summary?: {
     overview: string;
     highlights: string[];
@@ -148,8 +147,6 @@ export const articles: Article[] = [
     ],
     url: "https://drive.google.com/file/d/12aKPBr5Oge3K18pABPv9W1M-iTmGio5i/view?usp=sharing",
     image: image3,
-    accent: "bg-sky-500",
-    dot: "bg-sky-400",
 
     summary: {
       overview:

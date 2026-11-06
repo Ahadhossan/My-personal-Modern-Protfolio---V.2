@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { Check, Copy, Mail, MapPin, Phone, X } from "lucide-react";
 import emailjs from "@emailjs/browser";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 
 // ============================================================
 // EMAILJS CONFIG
@@ -149,9 +150,18 @@ function ContactRow({
     "block max-w-full break-words [overflow-wrap:anywhere] text-[15px] font-medium leading-snug tracking-[-0.015em] text-[#10243f] transition-colors dark:text-slate-100 sm:text-base lg:text-[17px]";
 
   return (
-    <div
-      className={`group relative isolate flex w-full items-start gap-4 overflow-hidden rounded-2xl border border-[#0E1525]/15 bg-white p-4 shadow-[0_8px_25px_rgba(15,23,42,0.05)] transition-all duration-300 sm:items-center sm:gap-5 sm:p-5 lg:rounded-[26px] lg:p-6
-                  hover:-translate-y-1 hover:border-[#15919B] hover:shadow-[0_18px_40px_rgba(15,23,42,0.09)] dark:border-white/10 dark:bg-slate-900/70 dark:shadow-[0_8px_25px_rgba(0,0,0,0.2)] dark:hover:border-teal-400/70
+    <motion.div
+      variants={{
+        hidden: { opacity: 0, y: 24 },
+        visible: {
+          opacity: 1,
+          y: 0,
+          transition: { duration: 0.45, ease: "easeOut" },
+        },
+      }}
+      whileHover={{ y: -3 }}
+      className={`group relative isolate flex w-full items-start gap-4 overflow-hidden rounded-2xl border border-[#0E1525]/15 bg-white p-4 shadow-[0_8px_25px_rgba(15,23,42,0.05)] transition-[border-color,box-shadow] duration-300 sm:items-center sm:gap-5 sm:p-5 lg:rounded-[26px] lg:p-6
+                  hover:border-[#15919B] hover:shadow-[0_18px_40px_rgba(15,23,42,0.09)] dark:border-white/10 dark:bg-slate-900/70 dark:shadow-[0_8px_25px_rgba(0,0,0,0.2)] dark:hover:border-teal-400/70
                   dark:hover:border-teal-400/70 cursor-pointer ${className}`}
     >
       {/* ICON */}
@@ -211,7 +221,7 @@ function ContactRow({
           )}
         </button>
       )}
-    </div>
+    </motion.div>
   );
 }
 
@@ -250,6 +260,15 @@ const chipActive =
   "border-[#15919B] bg-[#15919B]/10 text-[#0f6b72] shadow-[0_2px_6px_rgba(21,145,155,0.25)] dark:border-teal-400/70 dark:bg-teal-400/15 dark:text-teal-200";
 const chipIdle =
   "border-slate-200 bg-white text-slate-500 hover:border-slate-400 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:text-white";
+
+const scrollItemVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+  },
+};
 
 // ============================================================
 // CONTACT PAGE
@@ -414,28 +433,55 @@ const Contact = ({ onBack }: { onBack?: () => void }) => {
         {/* ====================================================
             LEFT SIDE
         ==================================================== */}
-        <section className="flex min-w-0 flex-col justify-between gap-10 border-b border-slate-200 dark:border-slate-800 lg:col-span-2 lg:gap-12 lg:border-b-0 lg:border-r dark:lg:border-r-slate-800 px-4 py-12  sm:px-6 sm:py-16 md:px-8 md:py-20">
+        <motion.section
+          initial={{ opacity: 0, x: -35 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, amount: 0.12 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="flex min-w-0 flex-col justify-between gap-10 border-b border-slate-200 dark:border-slate-800 lg:col-span-2 lg:gap-12 lg:border-b-0 lg:border-r dark:lg:border-r-slate-800 px-4 py-12  sm:px-6 sm:py-16 md:px-8 md:py-20"
+        >
           {/* INTRO */}
           <div>
-            <h1
+            <motion.h1
+              initial={{ opacity: 0, y: 30, filter: "blur(7px)" }}
+              whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
               style={{ fontFamily: "'Fraunces', Georgia, serif" }}
               className="max-w-md text-[34px] font-normal leading-tight tracking-tight text-[#0F2E33] dark:text-white sm:text-[44px] lg:text-[52px] xl:text-[55px]"
             >
               Say <span className="text-[#15919B]">hello</span>.
-            </h1>
+            </motion.h1>
 
-            <p className="mt-2 max-w-md text-[16px] leading-relaxed text-gray-600 transition-colors duration-300 dark:text-slate-400 sm:mt-4 sm:text-base sm:text-[17px]">
+            <motion.p
+              initial={{ opacity: 0, y: 22 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.18, duration: 0.65, ease: "easeOut" }}
+              className="mt-2 max-w-md text-[16px] leading-relaxed text-gray-600 transition-colors duration-300 dark:text-slate-400 sm:mt-4 sm:text-base sm:text-[17px]"
+            >
               I take on a handful of design and development projects each
               quarter. Tell me what you&apos;re building and I&apos;ll get back
               to you within two days.
-            </p>
+            </motion.p>
           </div>
 
           {/* CONTACT CARDS
               mobile: 1 column
               tablet (md): email full width, location + phone side by side
               desktop (lg): 1 column inside the left panel */}
-          <div className="grid w-full grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-1 lg:gap-6">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.12 }}
+            variants={{
+              hidden: {},
+              visible: {
+                transition: { staggerChildren: 0.14, delayChildren: 0.12 },
+              },
+            }}
+            className="grid w-full grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-1 lg:gap-6"
+          >
             <ContactRow
               icon={Mail}
               label="Email"
@@ -465,18 +511,39 @@ const Contact = ({ onBack }: { onBack?: () => void }) => {
               copyValue={CONTACT_PHONE_RAW}
               onCopy={showToast}
             />
-          </div>
-        </section>
+          </motion.div>
+        </motion.section>
 
         {/* ====================================================
             RIGHT SIDE
         ==================================================== */}
-        <section className="flex min-w-0 items-center px-4 py-10 sm:px-6 sm:py-12 lg:col-span-3 lg:px-10 lg:py-14 xl:px-12">
+        <motion.section
+          initial={{ opacity: 0, x: 35 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, amount: 0.08 }}
+          transition={{ duration: 0.7, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+          className="flex min-w-0 items-center px-4 py-10 sm:px-6 sm:py-12 lg:col-span-3 lg:px-10 lg:py-14 xl:px-12"
+        >
           {status !== "sent" ? (
-            <form onSubmit={handleSubmit} className="w-full max-w-2xl">
+            <motion.form
+              onSubmit={handleSubmit}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.12 }}
+              variants={{
+                hidden: {},
+                visible: {
+                  transition: { staggerChildren: 0.1, delayChildren: 0.08 },
+                },
+              }}
+              className="w-full max-w-2xl"
+            >
               {/* NAME + EMAIL */}
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6">
-                <div className="min-w-0">
+              <motion.div
+                variants={scrollItemVariants}
+                className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6"
+              >
+                <motion.div variants={scrollItemVariants} className="min-w-0">
                   <label
                     htmlFor="name"
                     className="mb-2 block text-sm font-medium text-slate-500 dark:text-slate-300"
@@ -493,9 +560,9 @@ const Contact = ({ onBack }: { onBack?: () => void }) => {
                     placeholder="Jordan Lee"
                     className={fieldClasses}
                   />
-                </div>
+                </motion.div>
 
-                <div className="min-w-0">
+                <motion.div variants={scrollItemVariants} className="min-w-0">
                   <label
                     htmlFor="email"
                     className="mb-2 block text-sm font-medium text-slate-500 dark:text-slate-300"
@@ -512,11 +579,14 @@ const Contact = ({ onBack }: { onBack?: () => void }) => {
                     placeholder="jordan@studio.com"
                     className={fieldClasses}
                   />
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
 
               {/* PROJECT TYPE */}
-              <div className="mt-7 sm:mt-8">
+              <motion.div
+                variants={scrollItemVariants}
+                className="mt-7 sm:mt-8"
+              >
                 <span className="mb-3 block text-sm font-medium text-slate-500 dark:text-slate-300">
                   What are you looking for
                 </span>
@@ -526,8 +596,10 @@ const Contact = ({ onBack }: { onBack?: () => void }) => {
                     const active = form.type === type;
 
                     return (
-                      <button
+                      <motion.button
                         key={type}
+                        whileHover={{ y: -2, scale: 1.03 }}
+                        whileTap={{ scale: 0.96 }}
                         type="button"
                         disabled={sending}
                         aria-pressed={active}
@@ -544,14 +616,16 @@ const Contact = ({ onBack }: { onBack?: () => void }) => {
                         }`}
                       >
                         {type}
-                      </button>
+                      </motion.button>
                     );
                   })}
 
                   {/* OTHERS */}
-                  <button
+                  <motion.button
                     type="button"
                     disabled={sending}
+                    whileHover={{ y: -2, scale: 1.03 }}
+                    whileTap={{ scale: 0.96 }}
                     aria-pressed={showOther}
                     aria-expanded={showOther}
                     aria-controls="other-type"
@@ -564,27 +638,41 @@ const Contact = ({ onBack }: { onBack?: () => void }) => {
                     }`}
                   >
                     Others
-                  </button>
+                  </motion.button>
                 </div>
 
-                {showOther && (
-                  <input
-                    id="other-type"
-                    type="text"
-                    autoFocus
-                    required
-                    disabled={sending}
-                    value={otherText}
-                    onChange={(e) => setOtherText(e.target.value)}
-                    placeholder="Tell me what you need"
-                    aria-label="Other project type"
-                    className={`${fieldClasses} mt-3`}
-                  />
-                )}
-              </div>
+                <AnimatePresence initial={false}>
+                  {showOther && (
+                    <motion.div
+                      key="other-project-type"
+                      initial={{ opacity: 0, height: 0, y: -8 }}
+                      animate={{ opacity: 1, height: "auto", y: 0 }}
+                      exit={{ opacity: 0, height: 0, y: -8 }}
+                      transition={{ duration: 0.25, ease: "easeOut" }}
+                      className="overflow-hidden"
+                    >
+                      <input
+                        id="other-type"
+                        type="text"
+                        autoFocus
+                        required
+                        disabled={sending}
+                        value={otherText}
+                        onChange={(e) => setOtherText(e.target.value)}
+                        placeholder="Tell me what you need"
+                        aria-label="Other project type"
+                        className={`${fieldClasses} mt-3`}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
 
               {/* MESSAGE */}
-              <div className="mt-7 sm:mt-8">
+              <motion.div
+                variants={scrollItemVariants}
+                className="mt-7 sm:mt-8"
+              >
                 <label
                   htmlFor="message"
                   className="mb-2 block text-sm font-medium text-slate-500 dark:text-slate-300"
@@ -602,7 +690,7 @@ const Contact = ({ onBack }: { onBack?: () => void }) => {
                   placeholder="What are you working on?"
                   className={`${fieldClasses} min-h-[140px] resize-none`}
                 />
-              </div>
+              </motion.div>
 
               {/* ERROR */}
               {status === "error" && (
@@ -615,10 +703,15 @@ const Contact = ({ onBack }: { onBack?: () => void }) => {
               )}
 
               {/* SUBMIT */}
-              <div className="mt-7 sm:mt-9">
-                <button
+              <motion.div
+                variants={scrollItemVariants}
+                className="mt-7 sm:mt-9"
+              >
+                <motion.button
                   type="submit"
                   disabled={sending}
+                  whileHover={!sending ? { y: -3, scale: 1.02 } : undefined}
+                  whileTap={!sending ? { scale: 0.97 } : undefined}
                   className="group relative flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-[#1E5470] to-[#2a7fa3] px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#2a7fa3]/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[#2a7fa3]/40 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:px-10"
                 >
                   <span
@@ -628,14 +721,20 @@ const Contact = ({ onBack }: { onBack?: () => void }) => {
                   <span className="relative">
                     {sending ? "Sending..." : "Submit"}
                   </span>
-                </button>
-              </div>
-            </form>
+                </motion.button>
+              </motion.div>
+            </motion.form>
           ) : (
             /* ====================================================
                SUCCESS STATE
             ==================================================== */
-            <div className="w-full max-w-xl" role="status">
+            <motion.div
+              initial={{ opacity: 0, y: 24, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+              className="w-full max-w-xl"
+              role="status"
+            >
               <h2
                 style={{ fontFamily: "'Fraunces', Georgia, serif" }}
                 className="text-3xl font-normal text-slate-900 dark:text-white sm:text-4xl"
@@ -665,40 +764,44 @@ const Contact = ({ onBack }: { onBack?: () => void }) => {
                   Cancel
                 </button>
               </div>
-            </div>
+            </motion.div>
           )}
-        </section>
+        </motion.section>
       </div>
 
       {/* COPY MESSAGE (toast) */}
-      <div
-        role="status"
-        aria-live="polite"
-        className={`pointer-events-none fixed inset-x-4 bottom-[max(1.5rem,env(safe-area-inset-bottom))] z-50 flex justify-center transition-all duration-300 ease-out ${
-          toast.visible
-            ? "translate-y-0 opacity-100"
-            : "translate-y-4 opacity-0"
-        }`}
-      >
-        <div
-          className={`flex max-w-full items-center gap-2.5 rounded-full px-4 py-2.5 text-sm font-medium text-white shadow-lg ${
-            toast.ok ? "bg-[#10243f]" : "bg-red-600"
-          }`}
-        >
-          <span
-            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
-              toast.ok ? "bg-emerald-500" : "bg-white/25"
-            }`}
+      <AnimatePresence>
+        {toast.visible && (
+          <motion.div
+            initial={{ opacity: 0, y: 18, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 12, scale: 0.96 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            role="status"
+            aria-live="polite"
+            className="pointer-events-none fixed inset-x-4 bottom-[max(1.5rem,env(safe-area-inset-bottom))] z-50 flex justify-center"
           >
-            {toast.ok ? (
-              <Check className="h-3 w-3" strokeWidth={3} />
-            ) : (
-              <X className="h-3 w-3" strokeWidth={3} />
-            )}
-          </span>
-          <span className="min-w-0 break-words">{toast.text}</span>
-        </div>
-      </div>
+            <div
+              className={`flex max-w-full items-center gap-2.5 rounded-full px-4 py-2.5 text-sm font-medium text-white shadow-lg ${
+                toast.ok ? "bg-[#10243f]" : "bg-red-600"
+              }`}
+            >
+              <span
+                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
+                  toast.ok ? "bg-emerald-500" : "bg-white/25"
+                }`}
+              >
+                {toast.ok ? (
+                  <Check className="h-3 w-3" strokeWidth={3} />
+                ) : (
+                  <X className="h-3 w-3" strokeWidth={3} />
+                )}
+              </span>
+              <span className="min-w-0 break-words">{toast.text}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 };

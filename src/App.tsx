@@ -1,4 +1,11 @@
-import { useRef, useState, type CSSProperties, type JSX } from "react";
+import {
+  lazy,
+  Suspense,
+  useRef,
+  useState,
+  type CSSProperties,
+  type JSX,
+} from "react";
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
@@ -6,24 +13,29 @@ import Navbar from "./common/Header/Navbar";
 import Footer from "./common/Footer/Footer";
 import { LoaderLayout } from "./common/PageLoader";
 
-import Home from "./components/HomeComponents/Home";
-import About from "./components/AboutComponents/About";
-import Experience from "./components/ExperienceComponents/Experience";
-import Skills from "./components/SkillsComponents/Skills";
-import Contact from "./components/ContactComponents/contact";
-
-import HireMe from "./features/hireme/HireMe";
-import WorkWithMe from "./features/workwithme/WorkWithMe";
-
 import { useNavHeight } from "./hooks/useNavHeight";
 
 import NotFound from "./common/NotFound";
 import ScrollProgress from "./common/ScrollProgress";
-import Projects from "./components/ProjectComponents/Projects";
-import Articles from "./components/ArticleComponents/Articles";
-import CertificateAward from "./components/CertificateAwardComponents/CertificateAward";
-import CertificatesPage from "./section/CertificateAward/CertificatesPage";
-import AwardsPage from "./section/CertificateAward/AwardsPage";
+
+const Home = lazy(() => import("./components/HomeComponents/Home"));
+const About = lazy(() => import("./components/AboutComponents/About"));
+const Experience = lazy(
+  () => import("./components/ExperienceComponents/Experience"),
+);
+const Skills = lazy(() => import("./components/SkillsComponents/Skills"));
+const Contact = lazy(() => import("./components/ContactComponents/contact"));
+const WorkWithMe = lazy(() => import("./features/workwithme/WorkWithMe"));
+const Projects = lazy(() => import("./components/ProjectComponents/Projects"));
+const Articles = lazy(() => import("./components/ArticleComponents/Articles"));
+const CertificateAward = lazy(
+  () => import("./components/CertificateAwardComponents/CertificateAward"),
+);
+const CertificatesPage = lazy(
+  () => import("./section/CertificateAward/CertificatesPage"),
+);
+const AwardsPage = lazy(() => import("./section/CertificateAward/AwardsPage"));
+const HireMe = lazy(() => import("./features/hireme/HireMe"));
 
 // ========================================
 // MAIN LAYOUT
@@ -38,9 +50,13 @@ const MainLayout = ({ onHireMeModalChange }: MainLayoutProps): JSX.Element => {
     <>
       <Navbar />
 
-      <Outlet />
+      <Suspense fallback={<div className="min-h-screen" aria-hidden="true" />}>
+        <Outlet />
+      </Suspense>
 
-      <HireMe onModalChange={onHireMeModalChange} />
+      <Suspense fallback={null}>
+        <HireMe onModalChange={onHireMeModalChange} />
+      </Suspense>
 
       <Footer />
     </>
