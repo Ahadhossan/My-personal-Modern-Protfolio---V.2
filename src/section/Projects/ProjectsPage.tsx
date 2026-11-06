@@ -301,8 +301,6 @@ const ProjectCard: FC<{
     githubUrl,
     detailsUrl,
     image,
-    accent,
-    dot,
     featured,
     status = "live",
     statusLabel,
@@ -382,7 +380,7 @@ const ProjectCard: FC<{
         }}
         onMouseMove={onMove}
         className={[
-          "group relative flex flex-col overflow-hidden rounded-2xl border border-[#0E1525]/15 bg-white dark:border-white/10 dark:bg-slate-900/70",
+          "group relative flex flex-col cursor-pointer overflow-hidden rounded-2xl border border-[#0E1525]/15 bg-white dark:border-white/10 dark:bg-slate-900/70",
           "transition-[border-color,box-shadow] duration-300 ease-out hover:border-[#15919B] hover:shadow-[0_1px_2px_rgba(15,23,42,0.04),0_24px_48px_-20px_rgba(21,145,155,0.3)] dark:hover:border-[#15919B] dark:hover:shadow-[0_24px_48px_-20px_rgba(21,145,155,0.2)]",
           featured ? "md:col-span-2 lg:flex-row" : "",
         ].join(" ")}
@@ -435,7 +433,6 @@ const ProjectCard: FC<{
               initial={{ opacity: 1 }}
               animate={{ opacity: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="pointer-events-none absolute inset-0 bg-slate-200 dark:bg-slate-800"
             />
           )}
 
@@ -458,7 +455,7 @@ const ProjectCard: FC<{
                   scale: 1.05,
                 }}
                 whileTap={{ scale: 0.95 }}
-                className="group/preview inline-flex h-10 items-center gap-2 rounded-xl border border-white/25 bg-slate-950/75 px-3.5 text-sm font-semibold text-white shadow-xl shadow-black/20 backdrop-blur-xl transition-colors duration-300 hover:border-white/50 hover:bg-slate-950"
+                className="group/preview inline-flex h-10 items-center gap-2 rounded-xl border border-white/25 bg-slate-950/75 px-3.5 text-sm font-semibold text-white shadow-xl shadow-black/20 backdrop-blur-xl transition-colors duration-300 hover:border-[#15919B] hover:bg-[#15919B]"
               >
                 <Eye className="h-4 w-4 transition-transform duration-300 group-hover/preview:scale-110" />
                 <span>Preview</span>
@@ -533,7 +530,7 @@ const ProjectCard: FC<{
               initial={{ scale: 0 }}
               animate={inView ? { scale: 1 } : { scale: 0 }}
               transition={{ duration: 0.3, delay: 0.2 }}
-              className={`h-2 w-2 rounded-full ${dot}`}
+              className="h-2 w-2 rounded-full bg-[#15919B]"
             />
 
             {role}
@@ -637,7 +634,7 @@ const ProjectCard: FC<{
                   rel="noopener noreferrer"
                   whileHover={{ y: -3, scale: 1.02 }}
                   whileTap={{ scale: 0.97 }}
-                  className="group/details inline-flex min-h-11 items-center gap-2 rounded-xl bg-slate-900 px-4 text-[15px] font-semibold text-white transition-colors duration-300 hover:bg-amber-500 dark:bg-white dark:text-slate-900 dark:hover:bg-amber-400"
+                  className="group/details inline-flex min-h-11 items-center gap-2 rounded-xl bg-slate-900 px-4 text-[15px] font-semibold text-white transition-colors duration-300 hover:bg-[#15919B] dark:bg-white dark:text-slate-900 dark:hover:bg-[#15919B] dark:hover:text-white"
                 >
                   View Project Brief
                   <ArrowUpRightIcon className="h-4 w-4 transition-transform duration-300 group-hover/details:-translate-y-0.5 group-hover/details:translate-x-0.5" />
@@ -652,11 +649,11 @@ const ProjectCard: FC<{
                     rel="noopener noreferrer"
                     whileHover={{ y: -3, scale: 1.02 }}
                     whileTap={{ scale: 0.97 }}
-                    className="group/live relative inline-flex min-h-11 items-center gap-2 overflow-hidden rounded-xl bg-slate-900 px-4 text-[15px] font-semibold text-white transition-colors duration-300 hover:text-white dark:bg-white dark:text-slate-900 dark:hover:text-white"
+                    className="group/live relative inline-flex min-h-11 items-center gap-2 overflow-hidden rounded-xl border border-slate-300 hover:text-white px-4 text-[15px] font-semibold text-[#0F2E33] transition-colors duration-300 focus-visible:outline-[#2a7fa3] dark:border-white/20 dark:text-white dark:hover:text-white dark:focus-visible:outline-[#2a7fa3]"
                   >
                     <span
                       aria-hidden="true"
-                      className={`absolute inset-0 -translate-x-full ${accent} transition-transform duration-300 ease-out group-hover/live:translate-x-0 motion-reduce:transition-none`}
+                      className="absolute inset-0 -translate-x-full bg-[#15919B] transition-transform duration-300 ease-out group-hover/live:translate-x-0 motion-reduce:transition-none"
                     />
                     <span className="relative">Live Project</span>
                     <ArrowUpRightIcon className="relative h-4 w-4" />
@@ -675,7 +672,7 @@ const ProjectCard: FC<{
                       y: -3,
                     }}
                     whileTap={{ scale: 0.94 }}
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-300 text-slate-900 transition-colors duration-300 hover:bg-slate-900 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:border-white/20 dark:text-white dark:hover:bg-white dark:hover:text-slate-900 dark:focus-visible:outline-white"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-xl cursor-pointer  border border-slate-300 text-slate-900 transition-all duration-300 hover:bg-[#2a7fa3] hover:text-white dark:border-white/20 dark:text-white dark:hover:bg-[#2a7fa3]"
                   >
                     <GithubIcon className="h-5 w-5" aria-hidden="true" />
                   </motion.a>
@@ -694,7 +691,7 @@ const ProjectCard: FC<{
                     }
                     whileHover={{ y: -3, scale: 1.02 }}
                     whileTap={{ scale: 0.97 }}
-                    className="group/more inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-slate-300 px-4 text-[15px] font-semibold text-slate-900 transition-all duration-300 hover:border-slate-900 hover:bg-slate-900 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:border-white/20 dark:text-white dark:hover:border-white/60 dark:hover:bg-white dark:hover:text-slate-900 dark:focus-visible:outline-white"
+                    className="group/more inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-xl border border-slate-300 px-4 text-[15px] font-semibold text-slate-900 transition-all duration-300 hover:border-[#2a7fa3] hover:bg-[#2a7fa3] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2a7fa3] disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/20 dark:text-white dark:hover:border-[#2a7fa3] dark:hover:bg-[#2a7fa3] dark:hover:text-white dark:focus-visible:outline-[#2a7fa3]"
                   >
                     Project Details
                     <ArrowRight className="h-4 w-4 -translate-x-1 opacity-0 transition-all duration-300 group-hover/more:translate-x-0 group-hover/more:opacity-100 motion-reduce:transition-none" />

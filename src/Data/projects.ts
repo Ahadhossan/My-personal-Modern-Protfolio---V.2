@@ -33,8 +33,6 @@ export interface Project {
   githubUrl: string;
   detailsUrl: string;
   image: string;
-  accent: string;
-  dot: string;
   featured?: boolean;
   status?: "live" | "upcoming";
   statusLabel?: string;
@@ -67,8 +65,6 @@ export const projects: Project[] = [
     detailsUrl:
       "https://docs.google.com/document/d/1xnFBCq-CGIYEH8-BgVyiu1v25TT3IyyWkbyMhmQxQaA/edit?tab=t.ynpbwjdkn6wi#heading=h.6pqpnjgo2c66",
     image: image1,
-    accent: "bg-amber-500",
-    dot: "bg-amber-400",
     featured: true,
     status: "upcoming",
     statusLabel: "Upcoming Project",
@@ -99,8 +95,6 @@ export const projects: Project[] = [
     githubUrl: "https://github.com/Ahadhossan/Voyalabs-Website",
     detailsUrl: "#",
     image: image2,
-    accent: "bg-indigo-500",
-    dot: "bg-indigo-400",
     status: "live",
   },
 
@@ -117,8 +111,6 @@ export const projects: Project[] = [
     githubUrl: "https://github.com/your-username/task-manager",
     detailsUrl: "/projects/task-manager",
     image: "https://picsum.photos/seed/tasks/800/500",
-    accent: "bg-emerald-500",
-    dot: "bg-emerald-400",
     status: "live",
   },
 
@@ -135,8 +127,6 @@ export const projects: Project[] = [
     githubUrl: "https://github.com/your-username/blog-platform",
     detailsUrl: "/projects/blog-platform",
     image: "https://picsum.photos/seed/blog-platform/800/500",
-    accent: "bg-rose-500",
-    dot: "bg-rose-400",
     status: "live",
   },
 
@@ -153,8 +143,6 @@ export const projects: Project[] = [
     githubUrl: "https://github.com/your-username/chat-app",
     detailsUrl: "/projects/chat-app",
     image: "https://picsum.photos/seed/chat-app/800/500",
-    accent: "bg-sky-500",
-    dot: "bg-sky-400",
     status: "live",
   },
 
@@ -170,8 +158,6 @@ export const projects: Project[] = [
     githubUrl: "https://github.com/your-username/portfolio-cms",
     detailsUrl: "/projects/portfolio-cms",
     image: "https://picsum.photos/seed/portfolio-cms/800/500",
-    accent: "bg-violet-500",
-    dot: "bg-violet-400",
     status: "live",
   },
 
@@ -188,8 +174,6 @@ export const projects: Project[] = [
     githubUrl: "https://github.com/your-username/food-delivery",
     detailsUrl: "/projects/food-delivery",
     image: "https://picsum.photos/seed/food-delivery/800/500",
-    accent: "bg-amber-500",
-    dot: "bg-amber-400",
     status: "live",
   },
 
@@ -206,8 +190,6 @@ export const projects: Project[] = [
     githubUrl: "https://github.com/your-username/expense-tracker",
     detailsUrl: "/projects/expense-tracker",
     image: "https://picsum.photos/seed/expense-tracker/800/500",
-    accent: "bg-teal-500",
-    dot: "bg-teal-400",
     status: "live",
   },
 
@@ -223,8 +205,6 @@ export const projects: Project[] = [
     githubUrl: "https://github.com/your-username/quiz-app",
     detailsUrl: "/projects/quiz-app",
     image: "https://picsum.photos/seed/quiz-app/800/500",
-    accent: "bg-pink-500",
-    dot: "bg-pink-400",
     status: "live",
   },
 ];
