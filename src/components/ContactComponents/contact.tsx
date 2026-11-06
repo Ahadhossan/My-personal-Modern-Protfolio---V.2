@@ -9,7 +9,8 @@ import React, {
 } from "react";
 import { Check, Copy, Mail, MapPin, Phone, X } from "lucide-react";
 import emailjs from "@emailjs/browser";
-import { motion, AnimatePresence, type Variants } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import type { Variants } from "framer-motion";
 
 // ============================================================
 // EMAILJS CONFIG
