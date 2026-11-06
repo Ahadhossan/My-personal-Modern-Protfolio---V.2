@@ -403,7 +403,7 @@ const SummaryModal: FC<{
             </motion.h3>
 
             <ul className="grid gap-3 sm:grid-cols-2">
-              {summary.highlights.map((item, index) => (
+              {summary.highlights.map((item) => (
                 <motion.li
                   key={item}
                   variants={revealItem}
