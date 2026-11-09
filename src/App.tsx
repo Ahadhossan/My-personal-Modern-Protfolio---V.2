@@ -14,7 +14,7 @@ import Footer from "./common/Footer/Footer";
 import { LoaderLayout } from "./common/PageLoader";
 
 import { useNavHeight } from "./hooks/useNavHeight";
-
+import { usePageTracking } from "./hooks/usePageTracking";
 import NotFound from "./common/NotFound";
 import ScrollProgress from "./common/ScrollProgress";
 
@@ -99,7 +99,7 @@ const NotFoundLayout = (): JSX.Element => {
 
 function App(): JSX.Element {
   const [isHireMeOpen, setIsHireMeOpen] = useState(false);
-
+  usePageTracking();
   return (
     <>
       <Toaster position="top-right" reverseOrder={false} />
