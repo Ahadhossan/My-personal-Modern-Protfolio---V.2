@@ -338,11 +338,14 @@ const SummaryModal: FC<{
           <motion.button
             type="button"
             onClick={onClose}
-            aria-label="Close summary"
-            whileHover={{ rotate: 90, scale: 1.08 }}
-            whileTap={{ scale: 0.9 }}
+            aria-label="Close image preview"
+            whileHover={{
+              rotate: 90,
+              scale: 1.1,
+            }}
+            whileTap={{ scale: 0.88 }}
             transition={{ type: "spring", stiffness: 400, damping: 18 }}
-            className="absolute right-5 top-5 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
+            className="absolute right-5 top-5 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition-colors duration-300 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:border-red-400/30 dark:hover:bg-red-500/10 dark:hover:text-red-400 cursor-pointer"
           >
             <X className="h-5 w-5" />
           </motion.button>
@@ -385,8 +388,8 @@ const SummaryModal: FC<{
                 />
 
                 <span className="absolute inset-0 flex items-center justify-center bg-slate-950/0 text-white opacity-0 transition group-hover:bg-slate-950/35 group-hover:opacity-100">
-                  <span className="inline-flex translate-y-2 items-center gap-2 rounded-full bg-slate-950/75 px-4 py-2 text-sm font-semibold backdrop-blur transition-transform duration-300 group-hover:translate-y-0">
-                    <Eye className="h-4 w-4" />
+                  <span className="group/preview inline-flex h-10 items-center gap-2 rounded-xl border border-white/25 bg-slate-950/75 px-3.5 text-sm font-semibold text-white shadow-xl shadow-black/20 backdrop-blur-xl transition-colors duration-300 hover:border-[#15919B] hover:bg-[#15919B] cursor-pointer">
+                    <Eye className="h-4 w-4 transition-transform duration-300 group-hover/preview:scale-110" />
                     Preview image
                   </span>
                 </span>
@@ -593,9 +596,13 @@ const SummaryModal: FC<{
                 type="button"
                 onClick={() => setImagePreviewOpen(false)}
                 aria-label="Close image preview"
-                whileHover={{ rotate: 90, scale: 1.08 }}
-                whileTap={{ scale: 0.9 }}
-                className="absolute -right-1 -top-10 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition-colors hover:bg-white/20 sm:right-0"
+                whileHover={{
+                  rotate: 90,
+                  scale: 1.1,
+                }}
+                whileTap={{ scale: 0.88 }}
+                transition={{ type: "spring", stiffness: 400, damping: 18 }}
+                className="absolute -right-1 -top-10 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition-colors duration-300 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:border-red-400/30 dark:hover:bg-red-500/10 dark:hover:text-red-400 cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </motion.button>

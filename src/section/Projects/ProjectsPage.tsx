@@ -401,7 +401,7 @@ const ImagePreviewModal: FC<{
             }}
             whileTap={{ scale: 0.88 }}
             transition={{ type: "spring", stiffness: 400, damping: 18 }}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-colors duration-300 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:border-red-400/30 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition-colors duration-300 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:border-red-400/30 dark:hover:bg-red-500/10 dark:hover:text-red-400 cursor-pointer"
           >
             <X className="h-5 w-5" />
           </motion.button>
@@ -459,16 +459,6 @@ const ImagePreviewModal: FC<{
           <p className="hidden text-xs text-slate-400 sm:block dark:text-slate-500">
             Press ESC or click outside to close
           </p>
-
-          <motion.button
-            type="button"
-            onClick={onClose}
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.96 }}
-            className="text-xs font-semibold text-slate-600 transition-colors hover:text-slate-950 dark:text-slate-400 dark:hover:text-white sm:hidden"
-          >
-            Close Preview
-          </motion.button>
         </div>
       </motion.div>
     </motion.div>,
@@ -670,7 +660,7 @@ const ProjectCard: FC<{
                   scale: 1.06,
                 }}
                 whileTap={{ scale: 0.93 }}
-                className="group/preview inline-flex h-10 items-center gap-2 rounded-xl border border-white/25 bg-slate-950/75 px-3.5 text-sm font-semibold text-white shadow-xl shadow-black/20 backdrop-blur-xl transition-colors duration-300 hover:border-[#15919B] hover:bg-[#15919B]"
+                className="group/preview inline-flex h-10 items-center gap-2 rounded-xl border border-white/25 bg-slate-950/75 px-3.5 text-sm font-semibold text-white shadow-xl shadow-black/20 backdrop-blur-xl transition-colors duration-300 hover:border-[#15919B] hover:bg-[#15919B] cursor-pointer"
               >
                 <Eye className="h-4 w-4 transition-transform duration-300 group-hover/preview:scale-110" />
                 <span>Preview</span>
@@ -837,15 +827,6 @@ const ProjectCard: FC<{
                 <motion.li
                   key={tag}
                   variants={tagVariants}
-                  whileHover={{
-                    y: -3,
-                    scale: 1.06,
-                    transition: {
-                      type: "spring",
-                      stiffness: 420,
-                      damping: 16,
-                    },
-                  }}
                   whileTap={{ scale: 0.95 }}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors duration-300 group-hover:border-slate-300 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:group-hover:border-white/20"
                 >
