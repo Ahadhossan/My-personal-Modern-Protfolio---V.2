@@ -1,7 +1,17 @@
 ﻿import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence, MotionConfig } from "framer-motion";
-import type { FC, MouseEvent } from "react";
+import {
+  motion,
+  AnimatePresence,
+  MotionConfig,
+  animate,
+  useMotionTemplate,
+  useMotionValue,
+  useReducedMotion,
+  useTransform,
+  type Variants,
+} from "framer-motion";
+import type { FC, PointerEvent } from "react";
 
 import {
   ArrowRight,
@@ -29,7 +39,7 @@ import SectionEyebrow from "../../common/SectionEyebrow";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
-const pageVariants = {
+const pageVariants: Variants = {
   hidden: {},
   visible: {
     transition: {
@@ -39,24 +49,24 @@ const pageVariants = {
   },
 };
 
-const fadeUpVariants = {
+const fadeUpVariants: Variants = {
   hidden: {
     opacity: 0,
     y: 22,
-    filter: "blur(5px)",
+    filter: "blur(6px)",
   },
   visible: {
     opacity: 1,
     y: 0,
     filter: "blur(0px)",
     transition: {
-      duration: 0.65,
+      duration: 0.7,
       ease,
     },
   },
 };
 
-const eyebrowVariants = {
+const eyebrowVariants: Variants = {
   hidden: {
     opacity: 0,
     x: -16,
@@ -65,35 +75,35 @@ const eyebrowVariants = {
     opacity: 1,
     x: 0,
     transition: {
-      duration: 0.5,
+      duration: 0.6,
       ease,
     },
   },
 };
 
-const sectionTitleVariants = {
+const sectionTitleVariants: Variants = {
   hidden: {
     opacity: 0,
-    x: -24,
-    filter: "blur(4px)",
+    y: 24,
+    filter: "blur(6px)",
   },
   visible: {
     opacity: 1,
-    x: 0,
+    y: 0,
     filter: "blur(0px)",
     transition: {
-      duration: 0.65,
+      duration: 0.7,
       ease,
     },
   },
 };
 
-const cardVariants = {
+const cardVariants: Variants = {
   hidden: {
     opacity: 0,
-    y: 32,
+    y: 44,
     scale: 0.97,
-    filter: "blur(4px)",
+    filter: "blur(6px)",
   },
   visible: {
     opacity: 1,
@@ -101,38 +111,38 @@ const cardVariants = {
     scale: 1,
     filter: "blur(0px)",
     transition: {
-      duration: 0.6,
+      duration: 0.75,
       ease,
     },
   },
 };
 
-const contentContainerVariants = {
+const contentContainerVariants: Variants = {
   hidden: {},
   visible: {
     transition: {
       staggerChildren: 0.075,
-      delayChildren: 0.12,
+      delayChildren: 0.15,
     },
   },
 };
 
-const contentVariants = {
+const contentVariants: Variants = {
   hidden: {
     opacity: 0,
-    y: 14,
+    y: 16,
   },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.42,
+      duration: 0.5,
       ease,
     },
   },
 };
 
-const listContainerVariants = {
+const listContainerVariants: Variants = {
   hidden: {},
   visible: {
     transition: {
@@ -141,22 +151,33 @@ const listContainerVariants = {
   },
 };
 
-const listItemVariants = {
+const listItemVariants: Variants = {
   hidden: {
     opacity: 0,
-    x: -9,
+    x: -10,
   },
   visible: {
     opacity: 1,
     x: 0,
     transition: {
-      duration: 0.35,
+      duration: 0.4,
       ease,
     },
   },
 };
 
-const modalBackdropVariants = {
+// Tags pop in with a small spring
+const tagVariants: Variants = {
+  hidden: { opacity: 0, scale: 0.8, y: 8 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 340, damping: 20 },
+  },
+};
+
+const modalBackdropVariants: Variants = {
   hidden: {
     opacity: 0,
   },
@@ -174,7 +195,7 @@ const modalBackdropVariants = {
   },
 };
 
-const modalVariants = {
+const modalVariants: Variants = {
   hidden: {
     opacity: 0,
     scale: 0.94,
@@ -187,7 +208,7 @@ const modalVariants = {
     y: 0,
     filter: "blur(0px)",
     transition: {
-      type: "spring" as const,
+      type: "spring",
       stiffness: 260,
       damping: 25,
     },
@@ -204,7 +225,7 @@ const modalVariants = {
   },
 };
 
-/* ---------- Word Reveal ---------- */
+/* ---------- Word Reveal (each word slides up from a mask) ---------- */
 
 const WordReveal: FC<{ text: string }> = ({ text }) => {
   const words = text.split(" ");
@@ -226,30 +247,52 @@ const WordReveal: FC<{ text: string }> = ({ text }) => {
       className="inline"
     >
       {words.map((word, index) => (
-        <motion.span
+        <span
           key={`${word}-${index}`}
-          variants={{
-            hidden: {
-              opacity: 0,
-              y: 20,
-              filter: "blur(5px)",
-            },
-            visible: {
-              opacity: 1,
-              y: 0,
-              filter: "blur(0px)",
-              transition: {
-                duration: 0.55,
-                ease,
-              },
-            },
-          }}
           aria-hidden="true"
-          className="mr-[0.25em] inline-block"
+          className="mr-[0.25em] inline-block overflow-hidden pb-1 align-bottom"
         >
-          {word}
-        </motion.span>
+          <motion.span
+            variants={{
+              hidden: { y: "110%" },
+              visible: {
+                y: "0%",
+                transition: {
+                  duration: 0.75,
+                  ease,
+                },
+              },
+            }}
+            className="inline-block"
+          >
+            {word}
+          </motion.span>
+        </span>
       ))}
+    </motion.span>
+  );
+};
+
+/* ---------- Count Up (number counts when scrolled into view) ---------- */
+
+const CountUp: FC<{ value: number }> = ({ value }) => {
+  const reduce = useReducedMotion();
+  const mv = useMotionValue(reduce ? value : 0);
+  const rounded = useTransform(mv, (v) => Math.round(v));
+
+  return (
+    <motion.span
+      viewport={{ once: true }}
+      onViewportEnter={() => {
+        if (reduce) {
+          mv.set(value);
+        } else {
+          animate(mv, value, { duration: 0.9, ease, delay: 0.25 });
+        }
+      }}
+      className="tabular-nums"
+    >
+      {rounded}
     </motion.span>
   );
 };
@@ -281,6 +324,156 @@ function useInView<T extends HTMLElement>() {
 
   return { ref, inView };
 }
+
+/* ---------- Image Preview Modal ---------- */
+
+const ImagePreviewModal: FC<{
+  title: string;
+  image: string;
+  onClose: () => void;
+}> = ({ title, image, onClose }) =>
+  createPortal(
+    <motion.div
+      key="preview-modal-backdrop"
+      variants={modalBackdropVariants}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 p-3 backdrop-blur-xl sm:p-6 lg:p-10"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${title} image preview`}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <motion.div
+        variants={modalVariants}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        className="relative flex max-h-[92vh] w-full max-w-7xl flex-col overflow-hidden rounded-2xl border border-white/15 bg-white shadow-2xl shadow-black/30 dark:bg-[#101827] dark:shadow-black/60 sm:rounded-3xl"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        {/* Modal Header */}
+
+        <div className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-200/80 bg-white/90 px-4 py-3.5 dark:border-white/10 dark:bg-[#101827]/95 sm:px-6 sm:py-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <motion.div
+              initial={{ scale: 0, rotate: -40 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{
+                type: "spring",
+                stiffness: 300,
+                damping: 16,
+                delay: 0.15,
+              }}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-white"
+            >
+              <Eye className="h-5 w-5" />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.45, delay: 0.2, ease }}
+              className="min-w-0"
+            >
+              <h3 className="truncate text-sm font-bold text-slate-900 dark:text-white sm:text-base">
+                {title}
+              </h3>
+
+              <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                Project Image Preview
+              </p>
+            </motion.div>
+          </div>
+
+          <motion.button
+            type="button"
+            onClick={onClose}
+            aria-label="Close image preview"
+            whileHover={{
+              rotate: 90,
+              scale: 1.1,
+            }}
+            whileTap={{ scale: 0.88 }}
+            transition={{ type: "spring", stiffness: 400, damping: 18 }}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-colors duration-300 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:border-red-400/30 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+          >
+            <X className="h-5 w-5" />
+          </motion.button>
+        </div>
+
+        {/* Image Viewer */}
+
+        <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-auto bg-slate-100 p-3 dark:bg-[#080e19] sm:p-6 lg:p-8">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 opacity-40"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle, rgba(148,163,184,0.25) 1px, transparent 1px)",
+              backgroundSize: "22px 22px",
+            }}
+          />
+
+          <motion.img
+            src={image}
+            alt={`${title} full-size preview`}
+            initial={{
+              opacity: 0,
+              scale: 0.9,
+              y: 16,
+              filter: "blur(6px)",
+            }}
+            animate={{
+              opacity: 1,
+              scale: 1,
+              y: 0,
+              filter: "blur(0px)",
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 200,
+              damping: 24,
+              delay: 0.1,
+            }}
+            className="relative z-10 max-h-[calc(92vh-130px)] max-w-full rounded-xl object-contain shadow-2xl shadow-slate-950/15 dark:shadow-black/40"
+          />
+        </div>
+
+        {/* Modal Footer */}
+
+        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-slate-200 bg-white px-4 py-3 dark:border-white/10 dark:bg-[#101827] sm:px-6">
+          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 motion-safe:animate-ping" />
+              <span className="relative h-2 w-2 rounded-full bg-emerald-500" />
+            </span>
+            <span>Image Preview</span>
+          </div>
+
+          <p className="hidden text-xs text-slate-400 sm:block dark:text-slate-500">
+            Press ESC or click outside to close
+          </p>
+
+          <motion.button
+            type="button"
+            onClick={onClose}
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+            className="text-xs font-semibold text-slate-600 transition-colors hover:text-slate-950 dark:text-slate-400 dark:hover:text-white sm:hidden"
+          >
+            Close Preview
+          </motion.button>
+        </div>
+      </motion.div>
+    </motion.div>,
+    document.body,
+  );
 
 /* ---------- Project Card ---------- */
 
@@ -345,20 +538,19 @@ const ProjectCard: FC<{
     };
   }, [previewOpen]);
 
-  /* ---------- Mouse Spotlight ---------- */
+  /* ---------- Mouse Spotlight (mouse only) ---------- */
 
-  const onMove = (event: MouseEvent<HTMLElement>) => {
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const spotlight = useMotionTemplate`radial-gradient(360px circle at ${mx}px ${my}px, rgba(21,145,155,0.13), transparent 70%)`;
+
+  const onMove = (event: PointerEvent<HTMLElement>) => {
+    if (event.pointerType !== "mouse") return;
+
     const rect = event.currentTarget.getBoundingClientRect();
 
-    event.currentTarget.style.setProperty(
-      "--x",
-      `${event.clientX - rect.left}px`,
-    );
-
-    event.currentTarget.style.setProperty(
-      "--y",
-      `${event.clientY - rect.top}px`,
-    );
+    mx.set(event.clientX - rect.left);
+    my.set(event.clientY - rect.top);
   };
 
   return (
@@ -369,22 +561,36 @@ const ProjectCard: FC<{
         initial="hidden"
         animate={inView ? "visible" : "hidden"}
         transition={{
-          delay: Math.min(index * 0.07, 0.35),
+          delay: Math.min(index * 0.09, 0.36),
         }}
         whileHover={{
           y: -6,
           transition: {
-            duration: 0.28,
-            ease,
+            type: "spring",
+            stiffness: 300,
+            damping: 22,
           },
         }}
-        onMouseMove={onMove}
+        onPointerMove={onMove}
         className={[
           "group relative flex flex-col cursor-pointer overflow-hidden rounded-2xl border border-[#0E1525]/15 bg-white dark:border-white/10 dark:bg-slate-900/70",
           "transition-[border-color,box-shadow] duration-300 ease-out hover:border-[#15919B] hover:shadow-[0_1px_2px_rgba(15,23,42,0.04),0_24px_48px_-20px_rgba(21,145,155,0.3)] dark:hover:border-[#15919B] dark:hover:shadow-[0_24px_48px_-20px_rgba(21,145,155,0.2)]",
           featured ? "md:col-span-2 lg:flex-row" : "",
         ].join(" ")}
       >
+        {/* Cursor spotlight */}
+        <motion.span
+          aria-hidden="true"
+          style={{ background: spotlight }}
+          className="pointer-events-none absolute inset-0 z-[5] opacity-0 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:hidden"
+        />
+
+        {/* Bottom hover accent */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute bottom-0 left-0 z-20 h-[2px] w-0 bg-[#15919B] transition-all duration-500 ease-out group-hover:w-full motion-reduce:transition-none"
+        />
+
         {/* Project Image */}
 
         <div
@@ -403,38 +609,41 @@ const ProjectCard: FC<{
               {title.charAt(0)}
             </motion.div>
           ) : (
-            <motion.img
-              src={image}
-              alt={`Cover image for ${title}`}
-              width={800}
-              height={500}
-              loading={eager ? "eager" : "lazy"}
-              decoding="async"
-              onLoad={() => setLoaded(true)}
-              onError={() => setImgFailed(true)}
-              initial={{ opacity: 0, scale: 1.08 }}
-              animate={{
-                opacity: loaded ? 1 : 0,
-                scale: loaded ? 1 : 1.08,
-              }}
-              whileHover={{ scale: 1.07 }}
-              transition={{
-                opacity: { duration: 0.5 },
-                scale: { duration: 0.8, ease },
-              }}
-              className="h-full w-full object-cover object-center"
-            />
-          )}
-
-          {/* Image Loading Overlay */}
-
-          {!loaded && !imgFailed && image && (
+            /* Zoom-out reveal once the image has loaded */
             <motion.div
-              initial={{ opacity: 1 }}
-              animate={{ opacity: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            />
+              initial={{ scale: 1.18 }}
+              animate={loaded && inView ? { scale: 1 } : { scale: 1.18 }}
+              transition={{ duration: 1.1, ease }}
+              className="h-full w-full"
+            >
+              <motion.img
+                src={image}
+                alt={`Cover image for ${title}`}
+                width={800}
+                height={500}
+                loading={eager ? "eager" : "lazy"}
+                decoding="async"
+                ref={(el) => {
+                  if (el?.complete && el.naturalWidth > 0) {
+                    setLoaded(true);
+                  }
+                }}
+                onLoad={() => setLoaded(true)}
+                onError={() => setImgFailed(true)}
+                whileHover={{ scale: 1.07 }}
+                transition={{ duration: 0.7, ease: "easeOut" }}
+                className={`h-full w-full object-cover object-center transition-opacity duration-700 ${
+                  loaded ? "opacity-100" : "opacity-0"
+                }`}
+              />
+            </motion.div>
           )}
+
+          {/* Shine sweep on hover */}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-0 left-0 w-1/3 -translate-x-full skew-x-[-18deg] bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-[900ms] ease-out group-hover:translate-x-[420%] motion-reduce:hidden"
+          />
 
           {/* Preview Button */}
 
@@ -444,17 +653,23 @@ const ProjectCard: FC<{
                 type="button"
                 onClick={() => setPreviewOpen(true)}
                 aria-label={`Preview ${title} image`}
-                initial={{ opacity: 0, y: 10 }}
-                animate={inView ? { opacity: 1, y: 0 } : {}}
+                initial={{ opacity: 0, y: 12, scale: 0.9 }}
+                animate={
+                  inView
+                    ? { opacity: 1, y: 0, scale: 1 }
+                    : { opacity: 0, y: 12, scale: 0.9 }
+                }
                 transition={{
-                  duration: 0.4,
-                  delay: 0.25 + Math.min(index * 0.06, 0.2),
+                  type: "spring",
+                  stiffness: 280,
+                  damping: 20,
+                  delay: 0.3 + Math.min(index * 0.06, 0.2),
                 }}
                 whileHover={{
                   y: -3,
-                  scale: 1.05,
+                  scale: 1.06,
                 }}
-                whileTap={{ scale: 0.95 }}
+                whileTap={{ scale: 0.93 }}
                 className="group/preview inline-flex h-10 items-center gap-2 rounded-xl border border-white/25 bg-slate-950/75 px-3.5 text-sm font-semibold text-white shadow-xl shadow-black/20 backdrop-blur-xl transition-colors duration-300 hover:border-[#15919B] hover:bg-[#15919B]"
               >
                 <Eye className="h-4 w-4 transition-transform duration-300 group-hover/preview:scale-110" />
@@ -476,33 +691,32 @@ const ProjectCard: FC<{
           {/* Project Status */}
 
           <motion.span
-            initial={{ opacity: 0, x: -12, scale: 0.95 }}
+            initial={{ opacity: 0, x: -14, scale: 0.9 }}
             animate={
               inView
                 ? { opacity: 1, x: 0, scale: 1 }
-                : { opacity: 0, x: -12, scale: 0.95 }
+                : { opacity: 0, x: -14, scale: 0.9 }
             }
             transition={{
-              duration: 0.45,
-              delay: 0.15 + Math.min(index * 0.06, 0.2),
-              ease,
+              type: "spring",
+              stiffness: 260,
+              damping: 20,
+              delay: 0.2 + Math.min(index * 0.06, 0.2),
             }}
             className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-3 py-1 text-xs font-semibold text-slate-800 backdrop-blur dark:border-white/15 dark:bg-slate-950/70 dark:text-white"
           >
-            <motion.span
-              animate={{
-                scale: [1, 1.18, 1],
-                opacity: [1, 0.7, 1],
-              }}
-              transition={{
-                duration: 2.2,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              className={`h-2 w-2 rounded-full ${
-                status === "upcoming" ? "bg-amber-500" : "bg-emerald-500"
-              }`}
-            />
+            <span className="relative flex h-2 w-2">
+              <span
+                className={`absolute inline-flex h-full w-full rounded-full opacity-75 motion-safe:animate-ping ${
+                  status === "upcoming" ? "bg-amber-400" : "bg-emerald-400"
+                }`}
+              />
+              <span
+                className={`relative h-2 w-2 rounded-full ${
+                  status === "upcoming" ? "bg-amber-500" : "bg-emerald-500"
+                }`}
+              />
+            </span>
 
             {statusLabel ??
               (status === "upcoming" ? "Upcoming Project" : "Live")}
@@ -529,7 +743,12 @@ const ProjectCard: FC<{
             <motion.span
               initial={{ scale: 0 }}
               animate={inView ? { scale: 1 } : { scale: 0 }}
-              transition={{ duration: 0.3, delay: 0.2 }}
+              transition={{
+                type: "spring",
+                stiffness: 500,
+                damping: 14,
+                delay: 0.3,
+              }}
               className="h-2 w-2 rounded-full bg-[#15919B]"
             />
 
@@ -583,7 +802,23 @@ const ProjectCard: FC<{
                 variants={listItemVariants}
                 className="flex items-start gap-2.5"
               >
-                <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                <motion.span
+                  variants={{
+                    hidden: { scale: 0, rotate: -45 },
+                    visible: {
+                      scale: 1,
+                      rotate: 0,
+                      transition: {
+                        type: "spring",
+                        stiffness: 420,
+                        damping: 14,
+                      },
+                    },
+                  }}
+                  className="mt-0.5 flex shrink-0"
+                >
+                  <CheckIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                </motion.span>
                 {highlight}
               </motion.li>
             ))}
@@ -601,13 +836,17 @@ const ProjectCard: FC<{
               return (
                 <motion.li
                   key={tag}
-                  variants={listItemVariants}
+                  variants={tagVariants}
                   whileHover={{
                     y: -3,
-                    scale: 1.05,
+                    scale: 1.06,
+                    transition: {
+                      type: "spring",
+                      stiffness: 420,
+                      damping: 16,
+                    },
                   }}
-                  whileTap={{ scale: 0.97 }}
-                  transition={{ duration: 0.2 }}
+                  whileTap={{ scale: 0.95 }}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors duration-300 group-hover:border-slate-300 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:group-hover:border-white/20"
                 >
                   <TagIcon
@@ -632,8 +871,9 @@ const ProjectCard: FC<{
                   href={detailsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  whileHover={{ y: -3, scale: 1.02 }}
-                  whileTap={{ scale: 0.97 }}
+                  whileHover={{ y: -3, scale: 1.03 }}
+                  whileTap={{ scale: 0.96 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 18 }}
                   className="group/details inline-flex min-h-11 items-center gap-2 rounded-xl bg-slate-900 px-4 text-[15px] font-semibold text-white transition-colors duration-300 hover:bg-[#15919B] dark:bg-white dark:text-slate-900 dark:hover:bg-[#15919B] dark:hover:text-white"
                 >
                   View Project Brief
@@ -647,16 +887,17 @@ const ProjectCard: FC<{
                     href={liveUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    whileHover={{ y: -3, scale: 1.02 }}
-                    whileTap={{ scale: 0.97 }}
-                    className="group/live relative inline-flex min-h-11 items-center gap-2 overflow-hidden rounded-xl border border-slate-300 hover:text-white px-4 text-[15px] font-semibold text-[#0F2E33] transition-colors duration-300 focus-visible:outline-[#2a7fa3] dark:border-white/20 dark:text-white dark:hover:text-white dark:focus-visible:outline-[#2a7fa3]"
+                    whileHover={{ y: -3, scale: 1.03 }}
+                    whileTap={{ scale: 0.96 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 18 }}
+                    className="group/live relative inline-flex min-h-11 items-center gap-2 overflow-hidden rounded-xl border border-slate-300 px-4 text-[15px] font-semibold text-[#0F2E33] transition-colors duration-300 hover:text-white focus-visible:outline-[#2a7fa3] dark:border-white/20 dark:text-white dark:hover:text-white dark:focus-visible:outline-[#2a7fa3]"
                   >
                     <span
                       aria-hidden="true"
                       className="absolute inset-0 -translate-x-full bg-[#15919B] transition-transform duration-300 ease-out group-hover/live:translate-x-0 motion-reduce:transition-none"
                     />
                     <span className="relative">Live Project</span>
-                    <ArrowUpRightIcon className="relative h-4 w-4" />
+                    <ArrowUpRightIcon className="relative h-4 w-4 transition-transform duration-300 group-hover/live:-translate-y-0.5 group-hover/live:translate-x-0.5" />
                   </motion.a>
                 )}
 
@@ -671,8 +912,9 @@ const ProjectCard: FC<{
                       scale: 1.1,
                       y: -3,
                     }}
-                    whileTap={{ scale: 0.94 }}
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-xl cursor-pointer  border border-slate-300 text-slate-900 transition-all duration-300 hover:bg-[#2a7fa3] hover:text-white dark:border-white/20 dark:text-white dark:hover:bg-[#2a7fa3]"
+                    whileTap={{ scale: 0.9 }}
+                    transition={{ type: "spring", stiffness: 420, damping: 16 }}
+                    className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl border border-slate-300 text-slate-900 transition-colors duration-300 hover:bg-[#2a7fa3] hover:text-white dark:border-white/20 dark:text-white dark:hover:bg-[#2a7fa3]"
                   >
                     <GithubIcon className="h-5 w-5" aria-hidden="true" />
                   </motion.a>
@@ -689,9 +931,10 @@ const ProjectCard: FC<{
                         ? "noopener noreferrer"
                         : undefined
                     }
-                    whileHover={{ y: -3, scale: 1.02 }}
-                    whileTap={{ scale: 0.97 }}
-                    className="group/more inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-xl border border-slate-300 px-4 text-[15px] font-semibold text-slate-900 transition-all duration-300 hover:border-[#2a7fa3] hover:bg-[#2a7fa3] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2a7fa3] disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/20 dark:text-white dark:hover:border-[#2a7fa3] dark:hover:bg-[#2a7fa3] dark:hover:text-white dark:focus-visible:outline-[#2a7fa3]"
+                    whileHover={{ y: -3, scale: 1.03 }}
+                    whileTap={{ scale: 0.96 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 18 }}
+                    className="group/more inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-xl border border-slate-300 px-4 text-[15px] font-semibold text-slate-900 transition-colors duration-300 hover:border-[#2a7fa3] hover:bg-[#2a7fa3] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2a7fa3] disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/20 dark:text-white dark:hover:border-[#2a7fa3] dark:hover:bg-[#2a7fa3] dark:hover:text-white dark:focus-visible:outline-[#2a7fa3]"
                   >
                     Project Details
                     <ArrowRight className="h-4 w-4 -translate-x-1 opacity-0 transition-all duration-300 group-hover/more:translate-x-0 group-hover/more:opacity-100 motion-reduce:transition-none" />
@@ -706,148 +949,14 @@ const ProjectCard: FC<{
       {/* ---------- Image Preview Modal ---------- */}
 
       <AnimatePresence>
-        {previewOpen &&
-          image &&
-          !imgFailed &&
-          createPortal(
-            <motion.div
-              key="preview-modal-backdrop"
-              variants={modalBackdropVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 p-3 backdrop-blur-xl sm:p-6 lg:p-10"
-              role="dialog"
-              aria-modal="true"
-              aria-label={`${title} image preview`}
-              onMouseDown={(event) => {
-                if (event.target === event.currentTarget) {
-                  setPreviewOpen(false);
-                }
-              }}
-            >
-              <motion.div
-                variants={modalVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                className="relative flex max-h-[92vh] w-full max-w-7xl flex-col overflow-hidden rounded-2xl border border-white/15 bg-white shadow-2xl shadow-black/30 dark:bg-[#101827] dark:shadow-black/60 sm:rounded-3xl"
-                onMouseDown={(event) => event.stopPropagation()}
-              >
-                {/* Modal Header */}
-
-                <div className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-200/80 bg-white/90 px-4 py-3.5 dark:border-white/10 dark:bg-[#101827]/95 sm:px-6 sm:py-4">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <motion.div
-                      initial={{ scale: 0, rotate: -30 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 300,
-                        damping: 18,
-                        delay: 0.12,
-                      }}
-                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-white"
-                    >
-                      <Eye className="h-5 w-5" />
-                    </motion.div>
-
-                    <div className="min-w-0">
-                      <h3 className="truncate text-sm font-bold text-slate-900 dark:text-white sm:text-base">
-                        {title}
-                      </h3>
-
-                      <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                        Project Image Preview
-                      </p>
-                    </div>
-                  </div>
-
-                  <motion.button
-                    type="button"
-                    onClick={() => setPreviewOpen(false)}
-                    aria-label="Close image preview"
-                    whileHover={{
-                      rotate: 90,
-                      scale: 1.08,
-                    }}
-                    whileTap={{ scale: 0.9 }}
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-colors duration-300 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:border-red-400/30 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-                  >
-                    <X className="h-5 w-5" />
-                  </motion.button>
-                </div>
-
-                {/* Image Viewer */}
-
-                <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-auto bg-slate-100 p-3 dark:bg-[#080e19] sm:p-6 lg:p-8">
-                  <div
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-0 opacity-40"
-                    style={{
-                      backgroundImage:
-                        "radial-gradient(circle, rgba(148,163,184,0.25) 1px, transparent 1px)",
-                      backgroundSize: "22px 22px",
-                    }}
-                  />
-
-                  <motion.img
-                    src={image}
-                    alt={`${title} full-size preview`}
-                    initial={{
-                      opacity: 0,
-                      scale: 0.94,
-                      y: 12,
-                    }}
-                    animate={{
-                      opacity: 1,
-                      scale: 1,
-                      y: 0,
-                    }}
-                    transition={{
-                      duration: 0.5,
-                      ease,
-                      delay: 0.08,
-                    }}
-                    className="relative z-10 max-h-[calc(92vh-130px)] max-w-full rounded-xl object-contain shadow-2xl shadow-slate-950/15 dark:shadow-black/40"
-                  />
-                </div>
-
-                {/* Modal Footer */}
-
-                <div className="flex shrink-0 items-center justify-between gap-3 border-t border-slate-200 bg-white px-4 py-3 dark:border-white/10 dark:bg-[#101827] sm:px-6">
-                  <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                    <motion.span
-                      animate={{
-                        opacity: [1, 0.5, 1],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                      }}
-                      className="h-2 w-2 rounded-full bg-emerald-500"
-                    />
-                    <span>Image Preview</span>
-                  </div>
-
-                  <p className="hidden text-xs text-slate-400 sm:block dark:text-slate-500">
-                    Press ESC or click outside to close
-                  </p>
-
-                  <motion.button
-                    type="button"
-                    onClick={() => setPreviewOpen(false)}
-                    whileHover={{ scale: 1.04 }}
-                    whileTap={{ scale: 0.96 }}
-                    className="text-xs font-semibold text-slate-600 transition-colors hover:text-slate-950 dark:text-slate-400 dark:hover:text-white sm:hidden"
-                  >
-                    Close Preview
-                  </motion.button>
-                </div>
-              </motion.div>
-            </motion.div>,
-            document.body,
-          )}
+        {previewOpen && image && !imgFailed && (
+          <ImagePreviewModal
+            key="preview-modal"
+            title={title}
+            image={image}
+            onClose={() => setPreviewOpen(false)}
+          />
+        )}
       </AnimatePresence>
     </>
   );
@@ -864,6 +973,8 @@ const ProjectSection: FC<{
   const [busy, setBusy] = useState(false);
 
   const gridRef = useRef<HTMLElement | null>(null);
+  const lockTimerRef = useRef<number | null>(null);
+  const showLessTimerRef = useRef<number | null>(null);
 
   const total = items.length;
   const shown = Math.min(visible, total);
@@ -872,13 +983,26 @@ const ProjectSection: FC<{
 
   const isUpcoming = type === "upcoming";
 
+  /* ---------- Timer Cleanup ---------- */
+
+  useEffect(() => {
+    return () => {
+      if (lockTimerRef.current) window.clearTimeout(lockTimerRef.current);
+      if (showLessTimerRef.current)
+        window.clearTimeout(showLessTimerRef.current);
+    };
+  }, []);
+
   /* ---------- Button Lock ---------- */
 
   const lock = (ms: number) => {
     setBusy(true);
 
-    window.setTimeout(() => {
+    if (lockTimerRef.current) window.clearTimeout(lockTimerRef.current);
+
+    lockTimerRef.current = window.setTimeout(() => {
       setBusy(false);
+      lockTimerRef.current = null;
     }, ms);
   };
 
@@ -908,7 +1032,15 @@ const ProjectSection: FC<{
       block: "start",
     });
 
-    window.setTimeout(() => setVisible(INITIAL_COUNT), reduce ? 0 : 450);
+    if (showLessTimerRef.current) window.clearTimeout(showLessTimerRef.current);
+
+    showLessTimerRef.current = window.setTimeout(
+      () => {
+        setVisible(INITIAL_COUNT);
+        showLessTimerRef.current = null;
+      },
+      reduce ? 0 : 450,
+    );
   };
 
   return (
@@ -917,7 +1049,7 @@ const ProjectSection: FC<{
       aria-label={title}
       initial={{
         opacity: 0,
-        y: 25,
+        y: 28,
       }}
       whileInView={{
         opacity: 1,
@@ -928,7 +1060,7 @@ const ProjectSection: FC<{
         amount: 0.08,
       }}
       transition={{
-        duration: 0.65,
+        duration: 0.75,
         ease,
       }}
       className="scroll-mt-8"
@@ -944,20 +1076,18 @@ const ProjectSection: FC<{
             viewport={{ once: true }}
             className="mb-3 flex items-center gap-2"
           >
-            <motion.span
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [1, 0.7, 1],
-              }}
-              transition={{
-                duration: 2.2,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              className={`h-2.5 w-2.5 rounded-full ${
-                isUpcoming ? "bg-amber-500" : "bg-emerald-500"
-              }`}
-            />
+            <span className="relative flex h-2.5 w-2.5">
+              <span
+                className={`absolute inline-flex h-full w-full rounded-full opacity-75 motion-safe:animate-ping ${
+                  isUpcoming ? "bg-amber-400" : "bg-emerald-400"
+                }`}
+              />
+              <span
+                className={`relative h-2.5 w-2.5 rounded-full ${
+                  isUpcoming ? "bg-amber-500" : "bg-emerald-500"
+                }`}
+              />
+            </span>
 
             <span
               className={`text-xs font-bold uppercase tracking-[0.18em] ${
@@ -981,7 +1111,7 @@ const ProjectSection: FC<{
           </motion.h2>
         </div>
 
-        {/* Project Count */}
+        {/* Project Count: number counts up */}
 
         <motion.div
           initial={{
@@ -1003,7 +1133,7 @@ const ProjectSection: FC<{
           }}
           whileHover={{
             y: -3,
-            scale: 1.03,
+            scale: 1.04,
           }}
           className={`inline-flex w-fit shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold ${
             isUpcoming
@@ -1016,7 +1146,7 @@ const ProjectSection: FC<{
               isUpcoming ? "bg-amber-500" : "bg-emerald-500"
             }`}
           />
-          {total} {total === 1 ? "Project" : "Projects"}
+          <CountUp value={total} /> {total === 1 ? "Project" : "Projects"}
         </motion.div>
       </div>
 
@@ -1052,7 +1182,7 @@ const ProjectSection: FC<{
               marginTop: open ? 24 : 0,
             }}
             transition={{
-              duration: 0.55,
+              duration: 0.6,
               ease,
             }}
             aria-hidden={!open}
@@ -1081,7 +1211,7 @@ const ProjectSection: FC<{
         <motion.div
           initial={{
             opacity: 0,
-            y: 16,
+            y: 20,
           }}
           whileInView={{
             opacity: 1,
@@ -1089,7 +1219,7 @@ const ProjectSection: FC<{
           }}
           viewport={{ once: true }}
           transition={{
-            duration: 0.5,
+            duration: 0.55,
             ease,
           }}
           className="mt-10 flex flex-col items-center gap-3"
@@ -1120,6 +1250,19 @@ const ProjectSection: FC<{
             </motion.p>
           </AnimatePresence>
 
+          {/* Progress track fills as more projects are shown */}
+          <div
+            aria-hidden="true"
+            className="h-1 w-40 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10"
+          >
+            <motion.div
+              initial={false}
+              animate={{ width: `${(shown / total) * 100}%` }}
+              transition={{ type: "spring", stiffness: 120, damping: 20 }}
+              className="h-full rounded-full bg-gradient-to-r from-[#15919B] to-[#2a7fa3]"
+            />
+          </div>
+
           <motion.button
             type="button"
             onClick={allShown ? showLess : showMore}
@@ -1129,7 +1272,7 @@ const ProjectSection: FC<{
                 ? undefined
                 : {
                     y: -3,
-                    scale: 1.025,
+                    scale: 1.04,
                   }
             }
             whileTap={
@@ -1139,20 +1282,15 @@ const ProjectSection: FC<{
                     scale: 0.96,
                   }
             }
-            transition={{
-              duration: 0.22,
-            }}
-            className={[
-              "group inline-flex cursor-pointer items-center gap-2 rounded-full border-2 border-[#15919B] px-6 py-2.5 text-sm font-medium text-[#0F2E33] transition-all duration-300 hover:bg-[#15919B] hover:text-white disabled:cursor-not-allowed disabled:opacity-60 dark:border-[#15919B]/70 dark:text-slate-200 dark:hover:bg-[#15919B] dark:hover:text-white",
-              busy ? "cursor-not-allowed opacity-60" : "",
-            ].join(" ")}
+            transition={{ type: "spring", stiffness: 400, damping: 18 }}
+            className="group mt-1 inline-flex cursor-pointer items-center gap-2 rounded-full border-2 border-[#15919B] px-6 py-2.5 text-sm font-medium text-[#0F2E33] transition-colors duration-300 hover:bg-[#15919B] hover:text-white disabled:cursor-not-allowed disabled:opacity-60 dark:border-[#15919B]/70 dark:text-slate-200 dark:hover:bg-[#15919B] dark:hover:text-white"
           >
             <AnimatePresence mode="wait" initial={false}>
               <motion.span
                 key={allShown ? "less" : "more"}
                 initial={{
                   opacity: 0,
-                  y: 7,
+                  y: 8,
                 }}
                 animate={{
                   opacity: 1,
@@ -1160,7 +1298,7 @@ const ProjectSection: FC<{
                 }}
                 exit={{
                   opacity: 0,
-                  y: -7,
+                  y: -8,
                 }}
                 transition={{
                   duration: 0.18,
@@ -1174,10 +1312,7 @@ const ProjectSection: FC<{
               animate={{
                 rotate: allShown ? 180 : 0,
               }}
-              transition={{
-                duration: 0.35,
-                ease,
-              }}
+              transition={{ type: "spring", stiffness: 260, damping: 18 }}
               className="inline-flex"
             >
               <ChevronDown aria-hidden="true" className="h-4 w-4" />
@@ -1202,7 +1337,15 @@ export default function ProjectsPage() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <main className="w-full overflow-hidden bg-white transition-colors duration-300 dark:bg-[#050505]">
+      <main className="relative w-full overflow-hidden bg-white transition-colors duration-300 dark:bg-[#050505]">
+        {/* Ambient glow: one slow drifting blob */}
+        <motion.div
+          aria-hidden="true"
+          animate={{ x: [0, -40, 0], y: [0, 30, 0], scale: [1, 1.12, 1] }}
+          transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
+          className="pointer-events-none absolute -right-32 -top-32 h-[320px] w-[420px] rounded-full bg-teal-400/10 blur-[110px] dark:bg-teal-500/10"
+        />
+
         <div className="relative mx-auto mt-0 max-w-7xl px-5 py-20 sm:px-6 sm:py-24 md:px-10 md:py-30">
           {/* Eyebrow */}
 
@@ -1227,6 +1370,20 @@ export default function ProjectsPage() {
               <WordReveal text="Selected Projects & Upcoming Work" />
             </motion.h1>
 
+            {/* Accent line draws itself */}
+            <motion.span
+              aria-hidden="true"
+              variants={{
+                hidden: { scaleX: 0 },
+                visible: {
+                  scaleX: 1,
+                  transition: { duration: 0.9, ease, delay: 0.3 },
+                },
+              }}
+              style={{ originX: 0 }}
+              className="mt-4 block h-[2px] w-16 rounded-full bg-[#15919B]"
+            />
+
             <motion.p
               variants={fadeUpVariants}
               className="mt-5 max-w-xl text-[16px] leading-relaxed text-gray-600 transition-colors duration-300 dark:text-slate-400 sm:text-[17px]"
@@ -1247,30 +1404,46 @@ export default function ProjectsPage() {
             />
           )}
 
-          {/* Section Divider */}
+          {/* Section Divider: line draws out from the centre, dot pops in */}
 
           {completedProjects.length > 0 && upcomingProjects.length > 0 && (
-            <motion.div
-              initial={{
-                opacity: 0,
-                scaleX: 0,
-              }}
-              whileInView={{
-                opacity: 1,
-                scaleX: 1,
-              }}
-              viewport={{
-                once: true,
-                amount: 0.5,
-              }}
-              transition={{
-                duration: 0.9,
-                ease,
-              }}
-              className="my-16 origin-center sm:my-20"
-            >
-              <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-300 to-transparent dark:via-white/15" />
-            </motion.div>
+            <div className="relative my-16 sm:my-20">
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  scaleX: 0,
+                }}
+                whileInView={{
+                  opacity: 1,
+                  scaleX: 1,
+                }}
+                viewport={{
+                  once: true,
+                  amount: 0.5,
+                }}
+                transition={{
+                  duration: 1,
+                  ease,
+                }}
+                className="origin-center"
+              >
+                <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-300 to-transparent dark:via-white/15" />
+              </motion.div>
+
+              <motion.span
+                aria-hidden="true"
+                initial={{ scale: 0, opacity: 0 }}
+                whileInView={{ scale: 1, opacity: 1 }}
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 400,
+                  damping: 14,
+                  delay: 0.5,
+                }}
+                className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#15919B]"
+              />
+            </div>
           )}
 
           {/* Upcoming Projects */}

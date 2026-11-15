@@ -9,8 +9,12 @@ import React, {
 } from "react";
 import { Check, Copy, Mail, MapPin, Phone, X } from "lucide-react";
 import emailjs from "@emailjs/browser";
-import { motion, AnimatePresence } from "framer-motion";
-import type { Variants } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+  useReducedMotion,
+  type Variants,
+} from "framer-motion";
 
 // ============================================================
 // EMAILJS CONFIG
@@ -81,6 +85,82 @@ interface ContactFormState {
 type SubmitStatus = "idle" | "sending" | "sent" | "error";
 
 // ============================================================
+// ANIMATION VARIANTS
+// ============================================================
+
+const EASE = [0.22, 1, 0.36, 1] as const;
+
+// Reduced-motion fallback: everything is simply visible
+const still: Variants = {
+  hidden: { opacity: 1 },
+  visible: { opacity: 1 },
+};
+
+const leftVariants: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.14, delayChildren: 0.05 } },
+};
+
+const wordVariants: Variants = {
+  hidden: { y: "110%" },
+  visible: { y: "0%", transition: { duration: 0.8, ease: EASE } },
+};
+
+const underlineVariants: Variants = {
+  hidden: { pathLength: 0, opacity: 0 },
+  visible: {
+    pathLength: 1,
+    opacity: 1,
+    transition: { duration: 0.9, delay: 0.55, ease: EASE },
+  },
+};
+
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 22, filter: "blur(6px)" },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.65, ease: EASE },
+  },
+};
+
+const rowsVariants: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.12, delayChildren: 0.05 } },
+};
+
+const rowVariants: Variants = {
+  hidden: { opacity: 0, y: 28, scale: 0.97 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { type: "spring", stiffness: 220, damping: 22 },
+  },
+};
+
+const formVariants: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.09, delayChildren: 0.1 } },
+};
+
+const fieldVariants: Variants = {
+  hidden: { opacity: 0, y: 24, filter: "blur(5px)" },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.6, ease: EASE },
+  },
+};
+
+const successVariants: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.1, delayChildren: 0.15 } },
+};
+
+// ============================================================
 // CONTACT ROW
 // ============================================================
 
@@ -111,6 +191,7 @@ function ContactRow({
   onCopy,
   className = "",
 }: ContactRowProps) {
+  const reduceMotion = Boolean(useReducedMotion());
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -152,21 +233,25 @@ function ContactRow({
 
   return (
     <motion.div
-      variants={{
-        hidden: { opacity: 0, y: 24 },
-        visible: {
-          opacity: 1,
-          y: 0,
-          transition: { duration: 0.45, ease: "easeOut" },
-        },
-      }}
-      whileHover={{ y: -3 }}
-      className={`group relative isolate flex w-full items-start gap-4 overflow-hidden rounded-2xl border border-[#0E1525]/15 bg-white p-4 shadow-[0_8px_25px_rgba(15,23,42,0.05)] transition-[border-color,box-shadow] duration-300 sm:items-center sm:gap-5 sm:p-5 lg:rounded-[26px] lg:p-6
-                  hover:border-[#15919B] hover:shadow-[0_18px_40px_rgba(15,23,42,0.09)] dark:border-white/10 dark:bg-slate-900/70 dark:shadow-[0_8px_25px_rgba(0,0,0,0.2)] dark:hover:border-teal-400/70
-                  dark:hover:border-teal-400/70 cursor-pointer ${className}`}
+      variants={reduceMotion ? still : rowVariants}
+      whileHover={
+        reduceMotion
+          ? undefined
+          : {
+              y: -4,
+              transition: { type: "spring", stiffness: 320, damping: 18 },
+            }
+      }
+      className={`group relative isolate flex w-full cursor-pointer items-start gap-4 overflow-hidden rounded-2xl border border-[#0E1525]/15 bg-white p-4 shadow-[0_8px_25px_rgba(15,23,42,0.05)] transition-[border-color,box-shadow] duration-300 hover:border-[#15919B] hover:shadow-[0_18px_40px_rgba(15,23,42,0.09)] dark:border-white/10 dark:bg-slate-900/70 dark:shadow-[0_8px_25px_rgba(0,0,0,0.2)] dark:hover:border-teal-400/70 sm:items-center sm:gap-5 sm:p-5 lg:rounded-[26px] lg:p-6 ${className}`}
     >
+      {/* Soft sweep on hover */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 -translate-x-full bg-gradient-to-r from-transparent via-[#15919B]/[0.06] to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full"
+      />
+
       {/* ICON */}
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#eefafa] to-[#e8f8f8] dark:from-teal-950/80 dark:to-slate-800 sm:h-12 sm:w-12">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#eefafa] to-[#e8f8f8] transition-transform duration-500 group-hover:-rotate-6 dark:from-teal-950/80 dark:to-slate-800 sm:h-12 sm:w-12">
         <Icon
           className="h-5 w-5 text-[#078b8c] transition-transform duration-500 group-hover:scale-110 sm:h-6 sm:w-6"
           strokeWidth={1.6}
@@ -174,10 +259,10 @@ function ContactRow({
         />
       </div>
 
-      {/* DESKTOP ACCENT LINE */}
+      {/* DESKTOP ACCENT LINE: grows in on hover */}
       <div
         aria-hidden="true"
-        className="hidden w-[3px] shrink-0 self-stretch rounded-full bg-gradient-to-b from-cyan-400 via-teal-400 to-cyan-500 xl:block"
+        className="hidden w-[3px] shrink-0 origin-top scale-y-50 self-stretch rounded-full bg-gradient-to-b from-cyan-400 via-teal-400 to-cyan-500 transition-transform duration-500 group-hover:scale-y-100 xl:block"
       />
 
       {/* CONTENT */}
@@ -208,19 +293,36 @@ function ContactRow({
 
       {/* COPY BUTTON (optional) */}
       {copyValue && (
-        <button
+        <motion.button
           type="button"
           onClick={handleCopy}
+          whileHover={reduceMotion ? undefined : { scale: 1.12 }}
+          whileTap={reduceMotion ? undefined : { scale: 0.85 }}
           aria-label={copied ? "Copied to clipboard" : `Copy ${label}`}
           title={copied ? "Copied!" : "Copy"}
           className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors duration-300 hover:border-[#15919B]/50 hover:text-[#078b8c] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#15919B] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-teal-400/60 dark:hover:text-teal-300"
         >
-          {copied ? (
-            <Check className="h-4 w-4 text-emerald-500" strokeWidth={2.2} />
-          ) : (
-            <Copy className="h-4 w-4" strokeWidth={1.8} />
-          )}
-        </button>
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.span
+              key={copied ? "check" : "copy"}
+              initial={
+                reduceMotion ? false : { scale: 0, rotate: -90, opacity: 0 }
+              }
+              animate={{ scale: 1, rotate: 0, opacity: 1 }}
+              exit={
+                reduceMotion ? undefined : { scale: 0, rotate: 90, opacity: 0 }
+              }
+              transition={{ type: "spring", stiffness: 500, damping: 22 }}
+              className="flex"
+            >
+              {copied ? (
+                <Check className="h-4 w-4 text-emerald-500" strokeWidth={2.2} />
+              ) : (
+                <Copy className="h-4 w-4" strokeWidth={1.8} />
+              )}
+            </motion.span>
+          </AnimatePresence>
+        </motion.button>
       )}
     </motion.div>
   );
@@ -255,27 +357,24 @@ const fieldClasses = `
   sm:text-base
 `;
 
+// Active chips get their background from a shared "pill" that glides between chips
 const chipBase =
-  "cursor-pointer rounded-full border px-3.5 py-2 text-xs font-medium transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm";
+  "relative cursor-pointer rounded-full border px-3.5 py-2 text-xs font-medium transition-colors duration-300 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm";
 const chipActive =
-  "border-[#15919B] bg-[#15919B]/10 text-[#0f6b72] shadow-[0_2px_6px_rgba(21,145,155,0.25)] dark:border-teal-400/70 dark:bg-teal-400/15 dark:text-teal-200";
+  "border-[#15919B] text-[#0f6b72] dark:border-teal-400/70 dark:text-teal-200";
 const chipIdle =
   "border-slate-200 bg-white text-slate-500 hover:border-slate-400 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:text-white";
 
-const scrollItemVariants: Variants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
-  },
-};
+const chipPillClasses =
+  "absolute inset-0 rounded-full bg-[#15919B]/10 shadow-[0_2px_6px_rgba(21,145,155,0.25)] dark:bg-teal-400/15";
 
 // ============================================================
 // CONTACT PAGE
 // ============================================================
 
 const Contact = ({ onBack }: { onBack?: () => void }) => {
+  const reduceMotion = Boolean(useReducedMotion());
+
   // ==========================================================
   // FORM STATE
   // ==========================================================
@@ -396,23 +495,30 @@ const Contact = ({ onBack }: { onBack?: () => void }) => {
   // COPY TOAST
   // ==========================================================
 
-  const [toast, setToast] = useState({ text: "", ok: true, visible: false });
+  const TOAST_MS = 2500;
+  const [toast, setToast] = useState({
+    id: 0,
+    text: "",
+    ok: true,
+    visible: false,
+  });
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showToast = (ok: boolean, label: string) => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
 
-    setToast({
+    setToast((t) => ({
+      id: t.id + 1,
       text: ok
         ? `${label} copied to clipboard`
         : `Couldn't copy ${label.toLowerCase()}. Please copy it manually.`,
       ok,
       visible: true,
-    });
+    }));
 
     toastTimer.current = setTimeout(
       () => setToast((t) => ({ ...t, visible: false })),
-      2500,
+      TOAST_MS,
     );
   };
 
@@ -428,38 +534,78 @@ const Contact = ({ onBack }: { onBack?: () => void }) => {
   // ==========================================================
 
   return (
-    <main className="mt-16 min-h-[calc(100vh-4rem)] w-full bg-white dark:bg-[#050505]">
+    <main className="mt-16 min-h-[calc(100vh-4rem)] w-full overflow-x-hidden bg-white dark:bg-[#050505]">
       {/* Mobile + tablet: stacked. Desktop (lg): 2 / 3 split. */}
       <div className="mx-auto grid min-h-[inherit] w-full max-w-7xl grid-cols-1 lg:grid-cols-5">
         {/* ====================================================
             LEFT SIDE
         ==================================================== */}
         <motion.section
-          initial={{ opacity: 0, x: -35 }}
-          whileInView={{ opacity: 1, x: 0 }}
+          variants={reduceMotion ? still : leftVariants}
+          initial="hidden"
+          whileInView="visible"
           viewport={{ once: true, amount: 0.12 }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="flex min-w-0 flex-col justify-between gap-10 border-b border-slate-200 dark:border-slate-800 lg:col-span-2 lg:gap-12 lg:border-b-0 lg:border-r dark:lg:border-r-slate-800 px-4 py-12  sm:px-6 sm:py-16 md:px-8 md:py-20"
+          className="flex min-w-0 flex-col justify-between gap-10 border-b border-slate-200 px-4 py-12 dark:border-slate-800 sm:px-6 sm:py-16 md:px-8 md:py-20 lg:col-span-2 lg:gap-12 lg:border-b-0 lg:border-r dark:lg:border-r-slate-800"
         >
           {/* INTRO */}
           <div>
-            <motion.h1
-              initial={{ opacity: 0, y: 30, filter: "blur(7px)" }}
-              whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            <h1
+              aria-label="Say hello."
               style={{ fontFamily: "'Fraunces', Georgia, serif" }}
               className="max-w-md text-[34px] font-normal leading-tight tracking-tight text-[#0F2E33] dark:text-white sm:text-[44px] lg:text-[52px] xl:text-[55px]"
             >
-              Say <span className="text-[#15919B]">hello</span>.
-            </motion.h1>
+              <span
+                aria-hidden="true"
+                className="inline-block overflow-hidden pb-1 align-bottom"
+              >
+                <motion.span
+                  variants={reduceMotion ? still : wordVariants}
+                  className="inline-block"
+                >
+                  Say
+                </motion.span>
+              </span>{" "}
+              {/* "hello." with a hand-drawn underline */}
+              <span aria-hidden="true" className="relative inline-block">
+                <span className="inline-block overflow-hidden pb-1 align-bottom">
+                  <motion.span
+                    variants={reduceMotion ? still : wordVariants}
+                    className="inline-block text-[#15919B]"
+                    transition={{ delay: 0.12 }}
+                  >
+                    hello
+                  </motion.span>
+                </span>
+                <svg
+                  viewBox="0 0 100 8"
+                  preserveAspectRatio="none"
+                  className="pointer-events-none absolute -bottom-0.5 left-0 h-2 w-full overflow-visible"
+                >
+                  <motion.path
+                    d="M2 5 Q 25 1 50 5 T 98 4"
+                    fill="none"
+                    stroke="#15919B"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    vectorEffect="non-scaling-stroke"
+                    variants={reduceMotion ? still : underlineVariants}
+                  />
+                </svg>
+                <span className="inline-block overflow-hidden pb-1 align-bottom">
+                  <motion.span
+                    variants={reduceMotion ? still : wordVariants}
+                    className="inline-block"
+                    transition={{ delay: 0.2 }}
+                  >
+                    .
+                  </motion.span>
+                </span>
+              </span>
+            </h1>
 
             <motion.p
-              initial={{ opacity: 0, y: 22 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.18, duration: 0.65, ease: "easeOut" }}
-              className="mt-2 max-w-md text-[16px] leading-relaxed text-gray-600 transition-colors duration-300 dark:text-slate-400 sm:mt-4 sm:text-base sm:text-[17px]"
+              variants={reduceMotion ? still : fadeUp}
+              className="mt-2 max-w-md text-[16px] leading-relaxed text-gray-600 transition-colors duration-300 dark:text-slate-400 sm:mt-4 sm:text-[17px]"
             >
               I take on a handful of design and development projects each
               quarter. Tell me what you&apos;re building and I&apos;ll get back
@@ -472,15 +618,7 @@ const Contact = ({ onBack }: { onBack?: () => void }) => {
               tablet (md): email full width, location + phone side by side
               desktop (lg): 1 column inside the left panel */}
           <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.12 }}
-            variants={{
-              hidden: {},
-              visible: {
-                transition: { staggerChildren: 0.14, delayChildren: 0.12 },
-              },
-            }}
+            variants={reduceMotion ? still : rowsVariants}
             className="grid w-full grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-1 lg:gap-6"
           >
             <ContactRow
@@ -519,275 +657,412 @@ const Contact = ({ onBack }: { onBack?: () => void }) => {
             RIGHT SIDE
         ==================================================== */}
         <motion.section
-          initial={{ opacity: 0, x: 35 }}
-          whileInView={{ opacity: 1, x: 0 }}
+          initial={reduceMotion ? false : { opacity: 0, x: 30 }}
+          whileInView={reduceMotion ? undefined : { opacity: 1, x: 0 }}
           viewport={{ once: true, amount: 0.08 }}
-          transition={{ duration: 0.7, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.8, delay: 0.1, ease: EASE }}
           className="flex min-w-0 items-center px-4 py-10 sm:px-6 sm:py-12 lg:col-span-3 lg:px-10 lg:py-14 xl:px-12"
         >
-          {status !== "sent" ? (
-            <motion.form
-              onSubmit={handleSubmit}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.12 }}
-              variants={{
-                hidden: {},
-                visible: {
-                  transition: { staggerChildren: 0.1, delayChildren: 0.08 },
-                },
-              }}
-              className="w-full max-w-2xl"
-            >
-              {/* NAME + EMAIL */}
-              <motion.div
-                variants={scrollItemVariants}
-                className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6"
+          <AnimatePresence mode="wait" initial={false}>
+            {status !== "sent" ? (
+              <motion.form
+                key="form"
+                onSubmit={handleSubmit}
+                variants={reduceMotion ? still : formVariants}
+                initial="hidden"
+                whileInView="visible"
+                exit={
+                  reduceMotion
+                    ? undefined
+                    : { opacity: 0, y: -16, transition: { duration: 0.25 } }
+                }
+                viewport={{ once: true, amount: 0.12 }}
+                className="w-full max-w-2xl"
               >
-                <motion.div variants={scrollItemVariants} className="min-w-0">
-                  <label
-                    htmlFor="name"
-                    className="mb-2 block text-sm font-medium text-slate-500 dark:text-slate-300"
+                {/* NAME + EMAIL */}
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6">
+                  <motion.div
+                    variants={reduceMotion ? still : fieldVariants}
+                    className="min-w-0"
                   >
-                    Your name
-                  </label>
-                  <input
-                    id="name"
-                    type="text"
-                    required
-                    disabled={sending}
-                    value={form.name}
-                    onChange={handleChange("name")}
-                    placeholder="Jordan Lee"
-                    className={fieldClasses}
-                  />
-                </motion.div>
+                    <label
+                      htmlFor="name"
+                      className="mb-2 block text-sm font-medium text-slate-500 dark:text-slate-300"
+                    >
+                      Your name
+                    </label>
+                    <input
+                      id="name"
+                      type="text"
+                      required
+                      disabled={sending}
+                      value={form.name}
+                      onChange={handleChange("name")}
+                      placeholder="Jordan Lee"
+                      className={fieldClasses}
+                    />
+                  </motion.div>
 
-                <motion.div variants={scrollItemVariants} className="min-w-0">
-                  <label
-                    htmlFor="email"
-                    className="mb-2 block text-sm font-medium text-slate-500 dark:text-slate-300"
+                  <motion.div
+                    variants={reduceMotion ? still : fieldVariants}
+                    className="min-w-0"
                   >
-                    Email
-                  </label>
-                  <input
-                    id="email"
-                    type="email"
-                    required
-                    disabled={sending}
-                    value={form.email}
-                    onChange={handleChange("email")}
-                    placeholder="jordan@studio.com"
-                    className={fieldClasses}
-                  />
-                </motion.div>
-              </motion.div>
-
-              {/* PROJECT TYPE */}
-              <motion.div
-                variants={scrollItemVariants}
-                className="mt-7 sm:mt-8"
-              >
-                <span className="mb-3 block text-sm font-medium text-slate-500 dark:text-slate-300">
-                  What are you looking for
-                </span>
-
-                <div className="flex flex-wrap gap-2">
-                  {PROJECT_TYPES.map((type) => {
-                    const active = form.type === type;
-
-                    return (
-                      <motion.button
-                        key={type}
-                        whileHover={{ y: -2, scale: 1.03 }}
-                        whileTap={{ scale: 0.96 }}
-                        type="button"
-                        disabled={sending}
-                        aria-pressed={active}
-                        onClick={() => {
-                          setForm((current) => ({
-                            ...current,
-                            type: type as ProjectType,
-                          }));
-                          setShowOther(false);
-                          setOtherText("");
-                        }}
-                        className={`${chipBase} ${
-                          active && !showOther ? chipActive : chipIdle
-                        }`}
-                      >
-                        {type}
-                      </motion.button>
-                    );
-                  })}
-
-                  {/* OTHERS */}
-                  <motion.button
-                    type="button"
-                    disabled={sending}
-                    whileHover={{ y: -2, scale: 1.03 }}
-                    whileTap={{ scale: 0.96 }}
-                    aria-pressed={showOther}
-                    aria-expanded={showOther}
-                    aria-controls="other-type"
-                    onClick={() => {
-                      setShowOther((current) => !current);
-                      setForm((current) => ({ ...current, type: "" }));
-                    }}
-                    className={`${chipBase} ${
-                      showOther ? chipActive : chipIdle
-                    }`}
-                  >
-                    Others
-                  </motion.button>
+                    <label
+                      htmlFor="email"
+                      className="mb-2 block text-sm font-medium text-slate-500 dark:text-slate-300"
+                    >
+                      Email
+                    </label>
+                    <input
+                      id="email"
+                      type="email"
+                      required
+                      disabled={sending}
+                      value={form.email}
+                      onChange={handleChange("email")}
+                      placeholder="jordan@studio.com"
+                      className={fieldClasses}
+                    />
+                  </motion.div>
                 </div>
 
-                <AnimatePresence initial={false}>
-                  {showOther && (
-                    <motion.div
-                      key="other-project-type"
-                      initial={{ opacity: 0, height: 0, y: -8 }}
-                      animate={{ opacity: 1, height: "auto", y: 0 }}
-                      exit={{ opacity: 0, height: 0, y: -8 }}
-                      transition={{ duration: 0.25, ease: "easeOut" }}
-                      className="overflow-hidden"
+                {/* PROJECT TYPE */}
+                <motion.div
+                  variants={reduceMotion ? still : fieldVariants}
+                  className="mt-7 sm:mt-8"
+                >
+                  <span className="mb-3 block text-sm font-medium text-slate-500 dark:text-slate-300">
+                    What are you looking for
+                  </span>
+
+                  <div className="flex flex-wrap gap-2">
+                    {PROJECT_TYPES.map((type) => {
+                      const active = form.type === type && !showOther;
+
+                      return (
+                        <motion.button
+                          key={type}
+                          whileHover={reduceMotion ? undefined : { y: -2 }}
+                          whileTap={reduceMotion ? undefined : { scale: 0.95 }}
+                          type="button"
+                          disabled={sending}
+                          aria-pressed={active}
+                          onClick={() => {
+                            setForm((current) => ({
+                              ...current,
+                              type: type as ProjectType,
+                            }));
+                            setShowOther(false);
+                            setOtherText("");
+                          }}
+                          className={`${chipBase} ${
+                            active ? chipActive : chipIdle
+                          }`}
+                        >
+                          {active && (
+                            <motion.span
+                              layoutId="project-type-pill"
+                              aria-hidden="true"
+                              transition={{
+                                type: "spring",
+                                stiffness: 420,
+                                damping: 32,
+                              }}
+                              className={chipPillClasses}
+                            />
+                          )}
+                          <span className="relative">{type}</span>
+                        </motion.button>
+                      );
+                    })}
+
+                    {/* OTHERS */}
+                    <motion.button
+                      type="button"
+                      disabled={sending}
+                      whileHover={reduceMotion ? undefined : { y: -2 }}
+                      whileTap={reduceMotion ? undefined : { scale: 0.95 }}
+                      aria-pressed={showOther}
+                      aria-expanded={showOther}
+                      aria-controls="other-type"
+                      onClick={() => {
+                        setShowOther((current) => !current);
+                        setForm((current) => ({ ...current, type: "" }));
+                      }}
+                      className={`${chipBase} ${
+                        showOther ? chipActive : chipIdle
+                      }`}
                     >
-                      <input
-                        id="other-type"
-                        type="text"
-                        autoFocus
-                        required
-                        disabled={sending}
-                        value={otherText}
-                        onChange={(e) => setOtherText(e.target.value)}
-                        placeholder="Tell me what you need"
-                        aria-label="Other project type"
-                        className={`${fieldClasses} mt-3`}
-                      />
-                    </motion.div>
+                      {showOther && (
+                        <motion.span
+                          layoutId="project-type-pill"
+                          aria-hidden="true"
+                          transition={{
+                            type: "spring",
+                            stiffness: 420,
+                            damping: 32,
+                          }}
+                          className={chipPillClasses}
+                        />
+                      )}
+                      <span className="relative">Others</span>
+                    </motion.button>
+                  </div>
+
+                  <AnimatePresence initial={false}>
+                    {showOther && (
+                      <motion.div
+                        key="other-project-type"
+                        initial={{ opacity: 0, height: 0, y: -8 }}
+                        animate={{ opacity: 1, height: "auto", y: 0 }}
+                        exit={{ opacity: 0, height: 0, y: -8 }}
+                        transition={{ duration: 0.3, ease: EASE }}
+                        className="overflow-hidden"
+                      >
+                        <input
+                          id="other-type"
+                          type="text"
+                          autoFocus
+                          required
+                          disabled={sending}
+                          value={otherText}
+                          onChange={(e) => setOtherText(e.target.value)}
+                          placeholder="Tell me what you need"
+                          aria-label="Other project type"
+                          className={`${fieldClasses} mt-3`}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+
+                {/* MESSAGE */}
+                <motion.div
+                  variants={reduceMotion ? still : fieldVariants}
+                  className="mt-7 sm:mt-8"
+                >
+                  <label
+                    htmlFor="message"
+                    className="mb-2 block text-sm font-medium text-slate-500 dark:text-slate-300"
+                  >
+                    Message
+                  </label>
+
+                  <textarea
+                    id="message"
+                    rows={5}
+                    required
+                    disabled={sending}
+                    value={form.message}
+                    onChange={handleChange("message")}
+                    placeholder="What are you working on?"
+                    className={`${fieldClasses} min-h-[140px] resize-none`}
+                  />
+                </motion.div>
+
+                {/* ERROR: expands in, then shakes once */}
+                <AnimatePresence initial={false}>
+                  {status === "error" && (
+                    <motion.p
+                      key={errorMsg}
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{
+                        opacity: 1,
+                        height: "auto",
+                        x: reduceMotion ? 0 : [0, -6, 6, -4, 4, 0],
+                      }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{
+                        duration: 0.4,
+                        x: { duration: 0.45, delay: 0.1 },
+                      }}
+                      className="mt-4 break-words text-sm leading-relaxed text-red-600"
+                      role="alert"
+                    >
+                      {errorMsg}
+                    </motion.p>
                   )}
                 </AnimatePresence>
-              </motion.div>
 
-              {/* MESSAGE */}
+                {/* SUBMIT */}
+                <motion.div
+                  variants={reduceMotion ? still : fieldVariants}
+                  className="mt-7 sm:mt-9"
+                >
+                  <motion.button
+                    type="submit"
+                    disabled={sending}
+                    whileHover={
+                      !sending && !reduceMotion
+                        ? {
+                            y: -3,
+                            scale: 1.02,
+                            transition: {
+                              type: "spring",
+                              stiffness: 400,
+                              damping: 18,
+                            },
+                          }
+                        : undefined
+                    }
+                    whileTap={
+                      !sending && !reduceMotion ? { scale: 0.97 } : undefined
+                    }
+                    className="group relative flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-[#1E5470] to-[#2a7fa3] px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#2a7fa3]/20 transition-shadow duration-300 hover:shadow-xl hover:shadow-[#2a7fa3]/40 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:px-10"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-0 -translate-x-full skew-x-12 bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full"
+                    />
+
+                    <AnimatePresence mode="wait" initial={false}>
+                      <motion.span
+                        key={sending ? "sending" : "idle"}
+                        initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={reduceMotion ? undefined : { opacity: 0, y: -10 }}
+                        transition={{ duration: 0.18 }}
+                        className="relative flex items-center gap-2"
+                      >
+                        {sending && (
+                          <motion.span
+                            aria-hidden="true"
+                            animate={{ rotate: 360 }}
+                            transition={{
+                              repeat: Infinity,
+                              duration: 0.8,
+                              ease: "linear",
+                            }}
+                            className="h-4 w-4 rounded-full border-2 border-white/40 border-t-white"
+                          />
+                        )}
+                        {sending ? "Sending..." : "Submit"}
+                      </motion.span>
+                    </AnimatePresence>
+                  </motion.button>
+                </motion.div>
+              </motion.form>
+            ) : (
+              /* ====================================================
+                 SUCCESS STATE
+              ==================================================== */
               <motion.div
-                variants={scrollItemVariants}
-                className="mt-7 sm:mt-8"
+                key="success"
+                variants={reduceMotion ? still : successVariants}
+                initial="hidden"
+                animate="visible"
+                className="w-full max-w-xl"
+                role="status"
               >
-                <label
-                  htmlFor="message"
-                  className="mb-2 block text-sm font-medium text-slate-500 dark:text-slate-300"
+                {/* Check mark draws itself */}
+                <motion.div
+                  variants={reduceMotion ? still : fadeUp}
+                  className="mb-5"
                 >
-                  Message
-                </label>
-
-                <textarea
-                  id="message"
-                  rows={5}
-                  required
-                  disabled={sending}
-                  value={form.message}
-                  onChange={handleChange("message")}
-                  placeholder="What are you working on?"
-                  className={`${fieldClasses} min-h-[140px] resize-none`}
-                />
-              </motion.div>
-
-              {/* ERROR */}
-              {status === "error" && (
-                <p
-                  className="mt-4 break-words text-sm leading-relaxed text-red-600"
-                  role="alert"
-                >
-                  {errorMsg}
-                </p>
-              )}
-
-              {/* SUBMIT */}
-              <motion.div
-                variants={scrollItemVariants}
-                className="mt-7 sm:mt-9"
-              >
-                <motion.button
-                  type="submit"
-                  disabled={sending}
-                  whileHover={!sending ? { y: -3, scale: 1.02 } : undefined}
-                  whileTap={!sending ? { scale: 0.97 } : undefined}
-                  className="group relative flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-[#1E5470] to-[#2a7fa3] px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#2a7fa3]/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[#2a7fa3]/40 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:px-10"
-                >
-                  <span
+                  <svg
+                    width="56"
+                    height="56"
+                    viewBox="0 0 56 56"
+                    fill="none"
                     aria-hidden="true"
-                    className="absolute inset-0 -translate-x-full skew-x-12 bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full"
-                  />
-                  <span className="relative">
-                    {sending ? "Sending..." : "Submit"}
-                  </span>
-                </motion.button>
+                  >
+                    <motion.circle
+                      cx="28"
+                      cy="28"
+                      r="25"
+                      stroke="#15919B"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      initial={reduceMotion ? false : { pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 0.7, ease: EASE }}
+                    />
+                    <motion.path
+                      d="M17 29 L25 37 L40 20"
+                      stroke="#15919B"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      initial={reduceMotion ? false : { pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 0.45, delay: 0.55, ease: EASE }}
+                    />
+                  </svg>
+                </motion.div>
+
+                <motion.h2
+                  variants={reduceMotion ? still : fadeUp}
+                  style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+                  className="text-3xl font-normal text-slate-900 dark:text-white sm:text-4xl"
+                >
+                  Message sent.
+                </motion.h2>
+
+                <motion.p
+                  variants={reduceMotion ? still : fadeUp}
+                  className="mt-3 max-w-md break-words text-sm leading-relaxed text-slate-500 sm:text-base"
+                >
+                  Thanks, {form.name.split(" ")[0]}. I&apos;ll reply to{" "}
+                  {form.email} within two business days.
+                </motion.p>
+
+                <motion.div
+                  variants={reduceMotion ? still : fadeUp}
+                  className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center"
+                >
+                  <motion.button
+                    type="button"
+                    onClick={resetForm}
+                    whileHover={reduceMotion ? undefined : { y: -2 }}
+                    whileTap={reduceMotion ? undefined : { scale: 0.96 }}
+                    className="w-full cursor-pointer rounded-full border border-[#15919B] px-5 py-3 text-sm font-medium text-[#0f6b72] transition-colors hover:bg-[#15919B]/10 dark:text-teal-300 dark:hover:bg-teal-400/10 sm:w-auto"
+                  >
+                    Send another message
+                  </motion.button>
+
+                  <motion.button
+                    type="button"
+                    onClick={goHome}
+                    whileHover={reduceMotion ? undefined : { y: -2 }}
+                    whileTap={reduceMotion ? undefined : { scale: 0.96 }}
+                    className="w-full cursor-pointer rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:text-white sm:w-auto"
+                  >
+                    Cancel
+                  </motion.button>
+                </motion.div>
               </motion.div>
-            </motion.form>
-          ) : (
-            /* ====================================================
-               SUCCESS STATE
-            ==================================================== */
-            <motion.div
-              initial={{ opacity: 0, y: 24, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-              className="w-full max-w-xl"
-              role="status"
-            >
-              <h2
-                style={{ fontFamily: "'Fraunces', Georgia, serif" }}
-                className="text-3xl font-normal text-slate-900 dark:text-white sm:text-4xl"
-              >
-                Message sent.
-              </h2>
-
-              <p className="mt-3 max-w-md break-words text-sm leading-relaxed text-slate-500 sm:text-base">
-                Thanks, {form.name.split(" ")[0]}. I&apos;ll reply to{" "}
-                {form.email} within two business days.
-              </p>
-
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="w-full cursor-pointer rounded-full border border-[#15919B] px-5 py-3 text-sm font-medium text-[#0f6b72] transition-colors hover:bg-[#15919B]/10 dark:text-teal-300 dark:hover:bg-teal-400/10 sm:w-auto"
-                >
-                  Send another message
-                </button>
-
-                <button
-                  type="button"
-                  onClick={goHome}
-                  className="w-full cursor-pointer rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:text-white sm:w-auto"
-                >
-                  Cancel
-                </button>
-              </div>
-            </motion.div>
-          )}
+            )}
+          </AnimatePresence>
         </motion.section>
       </div>
 
-      {/* COPY MESSAGE (toast) */}
+      {/* COPY MESSAGE (toast) with a countdown bar */}
       <AnimatePresence>
         {toast.visible && (
           <motion.div
-            initial={{ opacity: 0, y: 18, scale: 0.96 }}
+            key={toast.id}
+            initial={{ opacity: 0, y: 24, scale: 0.92 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 12, scale: 0.96 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
+            exit={{ opacity: 0, y: 14, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 380, damping: 26 }}
             role="status"
             aria-live="polite"
             className="pointer-events-none fixed inset-x-4 bottom-[max(1.5rem,env(safe-area-inset-bottom))] z-50 flex justify-center"
           >
             <div
-              className={`flex max-w-full items-center gap-2.5 rounded-full px-4 py-2.5 text-sm font-medium text-white shadow-lg ${
+              className={`relative flex max-w-full items-center gap-2.5 overflow-hidden rounded-full px-4 py-2.5 text-sm font-medium text-white shadow-lg ${
                 toast.ok ? "bg-[#10243f]" : "bg-red-600"
               }`}
             >
-              <span
+              <motion.span
+                initial={reduceMotion ? false : { scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 500,
+                  damping: 15,
+                  delay: 0.1,
+                }}
                 className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
                   toast.ok ? "bg-emerald-500" : "bg-white/25"
                 }`}
@@ -797,8 +1072,19 @@ const Contact = ({ onBack }: { onBack?: () => void }) => {
                 ) : (
                   <X className="h-3 w-3" strokeWidth={3} />
                 )}
-              </span>
+              </motion.span>
               <span className="min-w-0 break-words">{toast.text}</span>
+
+              {!reduceMotion && (
+                <motion.span
+                  aria-hidden="true"
+                  initial={{ scaleX: 1 }}
+                  animate={{ scaleX: 0 }}
+                  transition={{ duration: TOAST_MS / 1000, ease: "linear" }}
+                  style={{ originX: 0 }}
+                  className="absolute inset-x-0 bottom-0 h-[2px] bg-white/40"
+                />
+              )}
             </div>
           </motion.div>
         )}

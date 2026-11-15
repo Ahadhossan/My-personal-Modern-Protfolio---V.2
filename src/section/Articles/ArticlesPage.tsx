@@ -1,8 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FC } from "react";
+import type { PointerEvent } from "react";
 import { createPortal } from "react-dom";
 import toast, { Toaster } from "react-hot-toast";
-import { motion, AnimatePresence, MotionConfig } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+  MotionConfig,
+  useMotionTemplate,
+  useMotionValue,
+  useScroll,
+  useSpring,
+  type Variants,
+} from "framer-motion";
 
 import {
   ArrowRight,
@@ -48,12 +58,12 @@ for (let i = INITIAL_COUNT; i < articles.length; i += STEP) {
 
 /* ---------- Animation Variants ---------- */
 
-const cardVariants = {
+const cardVariants: Variants = {
   hidden: {
     opacity: 0,
-    y: 28,
-    scale: 0.985,
-    filter: "blur(4px)",
+    y: 40,
+    scale: 0.97,
+    filter: "blur(6px)",
   },
   visible: {
     opacity: 1,
@@ -63,42 +73,48 @@ const cardVariants = {
   },
 };
 
-const modalVariants = {
+const modalVariants: Variants = {
   hidden: {
     opacity: 0,
-    y: 24,
-    scale: 0.97,
+    y: 32,
+    scale: 0.95,
+    filter: "blur(6px)",
   },
   visible: {
     opacity: 1,
     y: 0,
     scale: 1,
+    filter: "blur(0px)",
+    transition: { type: "spring", stiffness: 260, damping: 26 },
   },
   exit: {
     opacity: 0,
-    y: 14,
+    y: 16,
     scale: 0.98,
+    transition: { duration: 0.2, ease: "easeIn" },
   },
 };
 
-const imagePreviewVariants = {
+const imagePreviewVariants: Variants = {
   hidden: {
     opacity: 0,
-    scale: 0.94,
-    y: 12,
+    scale: 0.9,
+    y: 16,
   },
   visible: {
     opacity: 1,
     scale: 1,
     y: 0,
+    transition: { type: "spring", stiffness: 240, damping: 24 },
   },
   exit: {
     opacity: 0,
-    scale: 0.97,
+    scale: 0.96,
+    transition: { duration: 0.18 },
   },
 };
 
-const staggerContainer = {
+const staggerContainer: Variants = {
   hidden: {},
   visible: {
     transition: {
@@ -108,16 +124,17 @@ const staggerContainer = {
   },
 };
 
-const revealItem = {
+const revealItem: Variants = {
   hidden: {
     opacity: 0,
-    y: 16,
-    filter: "blur(3px)",
+    y: 18,
+    filter: "blur(4px)",
   },
   visible: {
     opacity: 1,
     y: 0,
     filter: "blur(0px)",
+    transition: { duration: 0.5, ease: EASE },
   },
 };
 
@@ -158,7 +175,7 @@ function useInView<T extends HTMLElement>() {
   return { ref, inView };
 }
 
-/* ---------- Word Reveal ---------- */
+/* ---------- Word Reveal (each word slides up from a mask) ---------- */
 
 const WordReveal: FC<{
   text: string;
@@ -168,29 +185,26 @@ const WordReveal: FC<{
   const words = text.split(" ");
 
   return (
-    <span className={className}>
+    <span className={className} aria-label={text}>
       {words.map((word, index) => (
-        <motion.span
+        <span
           key={`${word}-${index}`}
-          initial={{
-            opacity: 0,
-            y: 22,
-            filter: "blur(5px)",
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-            filter: "blur(0px)",
-          }}
-          transition={{
-            duration: 0.5,
-            delay: delay + index * 0.055,
-            ease: EASE,
-          }}
-          className="mr-[0.25em] inline-block"
+          aria-hidden="true"
+          className="mr-[0.25em] inline-block overflow-hidden pb-1 align-bottom"
         >
-          {word}
-        </motion.span>
+          <motion.span
+            initial={{ y: "110%" }}
+            animate={{ y: "0%" }}
+            transition={{
+              duration: 0.75,
+              delay: delay + index * 0.07,
+              ease: EASE,
+            }}
+            className="inline-block"
+          >
+            {word}
+          </motion.span>
+        </span>
       ))}
     </span>
   );
@@ -209,6 +223,15 @@ const SummaryModal: FC<{
   const downloadController = useRef<AbortController | null>(null);
   const objectUrlRef = useRef<string | null>(null);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Reading progress bar tied to the modal's own scroll area
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const { scrollYProgress } = useScroll({ container: scrollRef });
+  const progress = useSpring(scrollYProgress, {
+    stiffness: 140,
+    damping: 28,
+    mass: 0.4,
+  });
 
   const cleanupDownload = useCallback(() => {
     downloadController.current?.abort();
@@ -258,11 +281,11 @@ const SummaryModal: FC<{
 
   return createPortal(
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.22 }}
-      className="fixed inset-0 z-[300] flex items-center justify-center overflow-hidden overscroll-none bg-slate-950/65 p-4 backdrop-blur-sm"
+      initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
+      animate={{ opacity: 1, backdropFilter: "blur(6px)" }}
+      exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
+      transition={{ duration: 0.25 }}
+      className="fixed inset-0 z-[300] flex items-center justify-center overflow-hidden overscroll-none bg-slate-950/65 p-4"
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
@@ -273,7 +296,6 @@ const SummaryModal: FC<{
         initial="hidden"
         animate="visible"
         exit="exit"
-        transition={{ duration: 0.35, ease: EASE }}
         role="dialog"
         aria-modal="true"
         aria-labelledby="article-summary-title"
@@ -291,7 +313,10 @@ const SummaryModal: FC<{
             variants={revealItem}
             className="mb-3 inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[10px] font-bold tracking-[0.14em] text-sky-700 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-300"
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75 motion-safe:animate-ping" />
+              <span className="relative h-1.5 w-1.5 rounded-full bg-sky-500" />
+            </span>
             SUMMARY
           </motion.span>
 
@@ -314,24 +339,35 @@ const SummaryModal: FC<{
             type="button"
             onClick={onClose}
             aria-label="Close summary"
-            whileHover={{ rotate: 90, scale: 1.05 }}
-            whileTap={{ scale: 0.94 }}
+            whileHover={{ rotate: 90, scale: 1.08 }}
+            whileTap={{ scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 400, damping: 18 }}
             className="absolute right-5 top-5 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
           >
             <X className="h-5 w-5" />
           </motion.button>
+
+          {/* Reading progress */}
+          <motion.span
+            aria-hidden="true"
+            style={{ scaleX: progress, originX: 0 }}
+            className="absolute inset-x-0 -bottom-px h-[2px] bg-gradient-to-r from-sky-400 to-teal-400"
+          />
         </motion.div>
 
         {/* Scrollable Content */}
 
-        <div className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-6 py-6 sm:px-8">
+        <div
+          ref={scrollRef}
+          className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-6 py-6 sm:px-8"
+        >
           {/* Image Preview */}
 
           {article.image && (
             <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.12, duration: 0.4, ease: EASE }}
+              initial={{ opacity: 0, y: 20, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: 0.15, duration: 0.5, ease: EASE }}
               className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/[0.03]"
             >
               <button
@@ -343,13 +379,13 @@ const SummaryModal: FC<{
                 <motion.img
                   src={article.image}
                   alt={`Workflow preview for ${article.title}`}
-                  whileHover={{ scale: 1.025 }}
-                  transition={{ duration: 0.4 }}
+                  whileHover={{ scale: 1.03 }}
+                  transition={{ duration: 0.5, ease: EASE }}
                   className="max-h-64 w-full object-contain"
                 />
 
                 <span className="absolute inset-0 flex items-center justify-center bg-slate-950/0 text-white opacity-0 transition group-hover:bg-slate-950/35 group-hover:opacity-100">
-                  <span className="inline-flex items-center gap-2 rounded-full bg-slate-950/75 px-4 py-2 text-sm font-semibold backdrop-blur">
+                  <span className="inline-flex translate-y-2 items-center gap-2 rounded-full bg-slate-950/75 px-4 py-2 text-sm font-semibold backdrop-blur transition-transform duration-300 group-hover:translate-y-0">
                     <Eye className="h-4 w-4" />
                     Preview image
                   </span>
@@ -364,11 +400,12 @@ const SummaryModal: FC<{
             </motion.div>
           )}
 
-          {/* Overview */}
+          {/* Overview: animates when scrolled into the modal view */}
 
           <motion.div
             initial="hidden"
-            animate="visible"
+            whileInView="visible"
+            viewport={{ once: true, root: scrollRef, amount: 0.3 }}
             variants={staggerContainer}
           >
             <motion.h3
@@ -391,7 +428,8 @@ const SummaryModal: FC<{
 
           <motion.div
             initial="hidden"
-            animate="visible"
+            whileInView="visible"
+            viewport={{ once: true, root: scrollRef, amount: 0.2 }}
             variants={staggerContainer}
           >
             <motion.h3
@@ -407,9 +445,9 @@ const SummaryModal: FC<{
                 <motion.li
                   key={item}
                   variants={revealItem}
-                  whileHover={{ y: -2 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm leading-6 text-slate-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300"
+                  whileHover={{ y: -3 }}
+                  transition={{ type: "spring", stiffness: 350, damping: 20 }}
+                  className="flex items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm leading-6 text-slate-600 transition-colors duration-300 hover:border-emerald-300 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300 dark:hover:border-emerald-400/40"
                 >
                   <Check className="mt-1 h-4 w-4 shrink-0 text-emerald-500" />
                   {item}
@@ -422,7 +460,8 @@ const SummaryModal: FC<{
 
           <motion.div
             initial="hidden"
-            animate="visible"
+            whileInView="visible"
+            viewport={{ once: true, root: scrollRef, amount: 0.15 }}
             variants={staggerContainer}
           >
             <motion.h3
@@ -441,13 +480,18 @@ const SummaryModal: FC<{
                   className="flex items-start gap-3 text-sm leading-6 text-slate-600 dark:text-slate-300"
                 >
                   <motion.span
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{
-                      delay: index * 0.05,
-                      type: "spring",
-                      stiffness: 250,
-                      damping: 20,
+                    variants={{
+                      hidden: { opacity: 0, scale: 0.4, rotate: -40 },
+                      visible: {
+                        opacity: 1,
+                        scale: 1,
+                        rotate: 0,
+                        transition: {
+                          type: "spring",
+                          stiffness: 320,
+                          damping: 16,
+                        },
+                      },
                     }}
                     className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-sky-100 text-xs font-bold text-sky-700 dark:bg-sky-400/15 dark:text-sky-300"
                   >
@@ -465,7 +509,8 @@ const SummaryModal: FC<{
           {summary.outcomes.length > 0 && (
             <motion.div
               initial="hidden"
-              animate="visible"
+              whileInView="visible"
+              viewport={{ once: true, root: scrollRef, amount: 0.2 }}
               variants={staggerContainer}
             >
               <motion.h3
@@ -495,15 +540,28 @@ const SummaryModal: FC<{
 
           <motion.div
             initial="hidden"
-            animate="visible"
+            whileInView="visible"
+            viewport={{ once: true, root: scrollRef, amount: 0.5 }}
             variants={staggerContainer}
             className="flex flex-wrap gap-2 border-t border-slate-200 pt-5 dark:border-white/10"
           >
             {article.tags.map((tag) => (
               <motion.span
                 key={tag}
-                variants={revealItem}
-                whileHover={{ scale: 1.04, y: -2 }}
+                variants={{
+                  hidden: { opacity: 0, scale: 0.8, y: 10 },
+                  visible: {
+                    opacity: 1,
+                    scale: 1,
+                    y: 0,
+                    transition: { type: "spring", stiffness: 380, damping: 22 },
+                  },
+                }}
+                whileHover={{
+                  scale: 1.06,
+                  y: -3,
+                  transition: { type: "spring", stiffness: 420, damping: 16 },
+                }}
                 className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300"
               >
                 {tag}
@@ -531,14 +589,16 @@ const SummaryModal: FC<{
             }}
           >
             <div className="relative flex max-h-[92dvh] w-full max-w-6xl flex-col items-center">
-              <button
+              <motion.button
                 type="button"
                 onClick={() => setImagePreviewOpen(false)}
                 aria-label="Close image preview"
-                className="absolute -right-1 -top-10 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition hover:rotate-90 hover:bg-white/20 sm:right-0"
+                whileHover={{ rotate: 90, scale: 1.08 }}
+                whileTap={{ scale: 0.9 }}
+                className="absolute -right-1 -top-10 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition-colors hover:bg-white/20 sm:right-0"
               >
                 <X className="h-5 w-5" />
-              </button>
+              </motion.button>
 
               <motion.img
                 src={article.image}
@@ -547,7 +607,6 @@ const SummaryModal: FC<{
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                transition={{ duration: 0.3, ease: EASE }}
                 className="max-h-[80dvh] max-w-full rounded-xl object-contain shadow-2xl"
               />
             </div>
@@ -588,6 +647,18 @@ const ArticleCard: FC<{
 
   const inView = reveal ?? seen;
 
+  // Cursor spotlight (mouse only)
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const spotlight = useMotionTemplate`radial-gradient(360px circle at ${mx}px ${my}px, rgba(21,145,155,0.13), transparent 70%)`;
+
+  const handleMove = (e: PointerEvent<HTMLElement>) => {
+    if (e.pointerType !== "mouse") return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    mx.set(e.clientX - rect.left);
+    my.set(e.clientY - rect.top);
+  };
+
   const closeSummary = useCallback(() => {
     setSummaryOpen(false);
   }, []);
@@ -618,25 +689,38 @@ const ArticleCard: FC<{
   return (
     <motion.article
       ref={ref}
+      onPointerMove={handleMove}
       variants={cardVariants}
       initial="hidden"
       animate={inView ? "visible" : "hidden"}
       transition={{
-        duration: 0.55,
-        delay: Math.min(index * 0.075, 0.3),
+        duration: 0.75,
+        delay: Math.min(index * 0.09, 0.36),
         ease: EASE,
       }}
       whileHover={{
-        y: -5,
-        transition: { duration: 0.25, ease: "easeOut" },
+        y: -6,
+        transition: { type: "spring", stiffness: 300, damping: 22 },
       }}
       className={[
         "group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-[#0E1525]/15 bg-white dark:border-white/10 dark:bg-slate-900/70",
-        "transition-all duration-300 ease-out hover:border-[#15919B] hover:shadow-[0_1px_2px_rgba(15,23,42,0.04),0_24px_48px_-20px_rgba(21,145,155,0.3)] dark:hover:border-[#15919B] dark:hover:shadow-[0_24px_48px_-20px_rgba(21,145,155,0.2)]",
-        "motion-reduce:transition-none",
+        "transition-[border-color,box-shadow] duration-300 ease-out hover:border-[#15919B] hover:shadow-[0_1px_2px_rgba(15,23,42,0.04),0_24px_48px_-20px_rgba(21,145,155,0.3)] dark:hover:border-[#15919B] dark:hover:shadow-[0_24px_48px_-20px_rgba(21,145,155,0.2)]",
         featured ? "md:col-span-2 lg:flex-row" : "",
       ].join(" ")}
     >
+      {/* Cursor spotlight */}
+      <motion.span
+        aria-hidden="true"
+        style={{ background: spotlight }}
+        className="pointer-events-none absolute inset-0 z-[5] opacity-0 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:hidden"
+      />
+
+      {/* Bottom hover accent */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-0 left-0 z-20 h-[2px] w-0 bg-[#15919B] transition-all duration-500 ease-out group-hover:w-full motion-reduce:transition-none"
+      />
+
       {/* Image */}
 
       <div
@@ -650,38 +734,61 @@ const ArticleCard: FC<{
             {title.charAt(0)}
           </div>
         ) : (
-          <motion.img
-            src={image}
-            alt={`Cover image for ${title}`}
-            width={800}
-            height={500}
-            loading={eager ? "eager" : "lazy"}
-            decoding="async"
-            ref={(el) => {
-              if (el?.complete && el.naturalWidth > 0) {
-                setLoaded(true);
-              }
-            }}
-            onLoad={() => setLoaded(true)}
-            onError={() => setImgFailed(true)}
-            whileHover={{ scale: 1.055 }}
-            transition={{ duration: 0.65, ease: "easeOut" }}
-            className={`h-full w-full object-cover object-center transition-opacity duration-500 ${
-              loaded ? "opacity-100" : "opacity-0"
-            }`}
-          />
+          /* Zoom-out reveal once the image has loaded */
+          <motion.div
+            initial={{ scale: 1.18 }}
+            animate={loaded && inView ? { scale: 1 } : { scale: 1.18 }}
+            transition={{ duration: 1.1, ease: EASE }}
+            className="h-full w-full"
+          >
+            <motion.img
+              src={image}
+              alt={`Cover image for ${title}`}
+              width={800}
+              height={500}
+              loading={eager ? "eager" : "lazy"}
+              decoding="async"
+              ref={(el) => {
+                if (el?.complete && el.naturalWidth > 0) {
+                  setLoaded(true);
+                }
+              }}
+              onLoad={() => setLoaded(true)}
+              onError={() => setImgFailed(true)}
+              whileHover={{ scale: 1.06 }}
+              transition={{ duration: 0.7, ease: "easeOut" }}
+              className={`h-full w-full object-cover object-center transition-opacity duration-700 ${
+                loaded ? "opacity-100" : "opacity-0"
+              }`}
+            />
+          </motion.div>
         )}
 
         {/* Image Overlay */}
 
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/20 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
+        {/* Shine sweep */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 left-0 w-1/3 -translate-x-full skew-x-[-18deg] bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-[900ms] ease-out group-hover:translate-x-[420%] motion-reduce:hidden"
+        />
+
         {/* Category */}
 
         <motion.span
-          initial={{ opacity: 0, x: -8 }}
-          animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: -8 }}
-          transition={{ delay: 0.25 + Math.min(index * 0.04, 0.2) }}
+          initial={{ opacity: 0, x: -12, scale: 0.9 }}
+          animate={
+            inView
+              ? { opacity: 1, x: 0, scale: 1 }
+              : { opacity: 0, x: -12, scale: 0.9 }
+          }
+          transition={{
+            type: "spring",
+            stiffness: 260,
+            damping: 20,
+            delay: 0.3 + Math.min(index * 0.04, 0.2),
+          }}
           className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-3 py-1 text-xs font-semibold text-slate-800 backdrop-blur dark:border-white/15 dark:bg-slate-950/70 dark:text-white"
         >
           <span className="h-2 w-2 rounded-full bg-[#2a7fa3]" />
@@ -699,7 +806,12 @@ const ArticleCard: FC<{
       >
         {/* Date and Reading Time */}
 
-        <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500 dark:text-slate-400">
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+          transition={{ duration: 0.5, delay: 0.2, ease: EASE }}
+          className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500 dark:text-slate-400"
+        >
           <span className="inline-flex items-center gap-1.5">
             <Calendar className="h-4 w-4" aria-hidden="true" />
             {date}
@@ -709,24 +821,32 @@ const ArticleCard: FC<{
             <Clock className="h-4 w-4" aria-hidden="true" />
             {readTime}
           </span>
-        </p>
+        </motion.p>
 
         {/* Title */}
 
-        <h3
+        <motion.h3
+          initial={{ opacity: 0, y: 14 }}
+          animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
+          transition={{ duration: 0.55, delay: 0.26, ease: EASE }}
           className={[
             "font-bold tracking-tight text-slate-900 transition-colors duration-300 group-hover:text-[#15919B] dark:text-white dark:group-hover:text-[#45c1c9]",
             featured ? "text-3xl sm:text-4xl" : "text-2xl",
           ].join(" ")}
         >
           {title}
-        </h3>
+        </motion.h3>
 
         {/* Description */}
 
-        <p className="max-w-prose text-[15px] leading-relaxed text-slate-600 dark:text-slate-300">
+        <motion.p
+          initial={{ opacity: 0, y: 12 }}
+          animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+          transition={{ duration: 0.55, delay: 0.32, ease: EASE }}
+          className="max-w-prose text-[15px] leading-relaxed text-slate-600 dark:text-slate-300"
+        >
           {excerpt}
-        </p>
+        </motion.p>
 
         {/* Tags */}
 
@@ -737,11 +857,17 @@ const ArticleCard: FC<{
             return (
               <motion.li
                 key={tag}
-                initial={{ opacity: 0, y: 8 }}
-                animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
+                initial={{ opacity: 0, scale: 0.85, y: 8 }}
+                animate={
+                  inView
+                    ? { opacity: 1, scale: 1, y: 0 }
+                    : { opacity: 0, scale: 0.85, y: 8 }
+                }
                 transition={{
-                  delay: 0.2 + tagIndex * 0.045,
-                  duration: 0.3,
+                  type: "spring",
+                  stiffness: 340,
+                  damping: 22,
+                  delay: 0.38 + tagIndex * 0.05,
                 }}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors duration-300 group-hover:border-slate-300 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:group-hover:border-white/20"
               >
@@ -760,8 +886,9 @@ const ArticleCard: FC<{
         <div className="mt-auto flex flex-wrap items-center gap-2.5 pt-2">
           {/* Read Article */}
 
-          <a
+          <motion.a
             href={url}
+            whileTap={{ scale: 0.96 }}
             className="group/read relative inline-flex min-h-11 items-center gap-2 overflow-hidden rounded-xl border border-slate-300 px-4 text-[15px] font-semibold text-[#0F2E33] transition-colors duration-300 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2a7fa3] dark:border-white/20 dark:text-white dark:hover:text-white dark:focus-visible:outline-[#2a7fa3]"
           >
             <span
@@ -772,7 +899,7 @@ const ArticleCard: FC<{
             <span className="relative z-10">Read Article</span>
 
             <ArrowUpRight className="relative z-10 h-4 w-4 transition-transform duration-300 group-hover/read:-translate-y-0.5 group-hover/read:translate-x-0.5 motion-reduce:transition-none" />
-          </a>
+          </motion.a>
 
           {/* Copy Link */}
 
@@ -781,26 +908,29 @@ const ArticleCard: FC<{
               type="button"
               onClick={copyLink}
               aria-label={copied ? "Link copied" : `Copy link to ${title}`}
-              whileHover={{ rotate: -3, scale: 1.06 }}
-              whileTap={{ scale: 0.94 }}
-              className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl border border-slate-300 text-slate-900 transition-all duration-300 hover:bg-[#2a7fa3] hover:text-white dark:border-white/20 dark:text-white dark:hover:bg-[#2a7fa3]"
+              whileHover={{ rotate: -4, scale: 1.08 }}
+              whileTap={{ scale: 0.88 }}
+              transition={{ type: "spring", stiffness: 420, damping: 16 }}
+              className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl border border-slate-300 text-slate-900 transition-colors duration-300 hover:bg-[#2a7fa3] hover:text-white dark:border-white/20 dark:text-white dark:hover:bg-[#2a7fa3]"
             >
               <AnimatePresence mode="wait" initial={false}>
                 {copied ? (
                   <motion.span
                     key="check"
-                    initial={{ opacity: 0, scale: 0.6, rotate: -30 }}
+                    initial={{ opacity: 0, scale: 0.4, rotate: -60 }}
                     animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                    exit={{ opacity: 0, scale: 0.6 }}
+                    exit={{ opacity: 0, scale: 0.4, rotate: 60 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 20 }}
                   >
                     <Check className="h-5 w-5" />
                   </motion.span>
                 ) : (
                   <motion.span
                     key="link"
-                    initial={{ opacity: 0, scale: 0.6 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.6 }}
+                    initial={{ opacity: 0, scale: 0.4, rotate: 60 }}
+                    animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                    exit={{ opacity: 0, scale: 0.4, rotate: -60 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 20 }}
                   >
                     <Link2 className="h-5 w-5" />
                   </motion.span>
@@ -822,8 +952,9 @@ const ArticleCard: FC<{
             aria-expanded={summaryOpen}
             aria-haspopup="dialog"
             whileHover={{ y: -2 }}
-            whileTap={{ scale: 0.97 }}
-            className="group/more inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-xl border border-slate-300 px-4 text-[15px] font-semibold text-slate-900 transition-all duration-300 hover:border-[#2a7fa3] hover:bg-[#2a7fa3] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2a7fa3] disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/20 dark:text-white dark:hover:border-[#2a7fa3] dark:hover:bg-[#2a7fa3] dark:hover:text-white dark:focus-visible:outline-[#2a7fa3]"
+            whileTap={{ scale: 0.96 }}
+            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+            className="group/more inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-xl border border-slate-300 px-4 text-[15px] font-semibold text-slate-900 transition-colors duration-300 hover:border-[#2a7fa3] hover:bg-[#2a7fa3] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2a7fa3] disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/20 dark:text-white dark:hover:border-[#2a7fa3] dark:hover:bg-[#2a7fa3] dark:hover:text-white dark:focus-visible:outline-[#2a7fa3]"
           >
             Summary
             <ArrowRight className="h-4 w-4 -translate-x-1 opacity-0 transition-all duration-300 group-hover/more:translate-x-0 group-hover/more:opacity-100 motion-reduce:transition-none" />
@@ -927,7 +1058,7 @@ export default function ArticlesPage() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <main className="w-full bg-white transition-colors duration-300 dark:bg-[#050505]">
+      <main className="relative w-full overflow-hidden bg-white transition-colors duration-300 dark:bg-[#050505]">
         {/* Toast Notifications */}
 
         <Toaster
@@ -961,13 +1092,21 @@ export default function ArticlesPage() {
           }}
         />
 
+        {/* Ambient glow: one slow drifting blob */}
+        <motion.div
+          aria-hidden="true"
+          animate={{ x: [0, -40, 0], y: [0, 30, 0], scale: [1, 1.12, 1] }}
+          transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
+          className="pointer-events-none absolute -right-32 -top-32 h-[320px] w-[420px] rounded-full bg-teal-400/10 blur-[110px] dark:bg-teal-500/10"
+        />
+
         <div className="relative mx-auto mt-0 max-w-7xl px-5 py-20 sm:px-6 sm:py-24 md:px-10 md:py-30">
           {/* Eyebrow */}
 
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, ease: EASE }}
+            initial={{ opacity: 0, x: -16 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, ease: EASE }}
             className="flex items-center gap-3"
           >
             <SectionEyebrow label="Articles" />
@@ -983,11 +1122,21 @@ export default function ArticlesPage() {
               />
             </h1>
 
+            {/* Accent line draws itself */}
+            <motion.span
+              aria-hidden="true"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 0.9, delay: 0.6, ease: EASE }}
+              style={{ originX: 0 }}
+              className="mt-4 block h-[2px] w-16 rounded-full bg-[#15919B]"
+            />
+
             <motion.p
               initial={{
                 opacity: 0,
                 y: 18,
-                filter: "blur(4px)",
+                filter: "blur(6px)",
               }}
               animate={{
                 opacity: 1,
@@ -995,8 +1144,8 @@ export default function ArticlesPage() {
                 filter: "blur(0px)",
               }}
               transition={{
-                duration: 0.55,
-                delay: 0.55,
+                duration: 0.65,
+                delay: 0.7,
                 ease: EASE,
               }}
               className="mt-5 max-w-xl text-[16px] leading-relaxed text-gray-600 transition-colors duration-300 dark:text-slate-400 sm:text-[17px]"
@@ -1044,7 +1193,7 @@ export default function ArticlesPage() {
                       marginTop: 0,
                     }}
                     transition={{
-                      duration: 0.45,
+                      duration: 0.5,
                       ease: EASE,
                     }}
                     className="overflow-hidden"
@@ -1070,10 +1219,10 @@ export default function ArticlesPage() {
 
           {total > INITIAL_COUNT && (
             <motion.div
-              initial={{ opacity: 0, y: 18 }}
+              initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.45, ease: EASE }}
+              transition={{ duration: 0.55, ease: EASE }}
               className="mt-12 flex flex-col items-center gap-3"
             >
               <p
@@ -1083,20 +1232,45 @@ export default function ArticlesPage() {
                 Showing {shown} of {total} articles
               </p>
 
+              {/* Progress track fills as more articles are shown */}
+              <div
+                aria-hidden="true"
+                className="h-1 w-40 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10"
+              >
+                <motion.div
+                  initial={false}
+                  animate={{ width: `${(shown / total) * 100}%` }}
+                  transition={{ type: "spring", stiffness: 120, damping: 20 }}
+                  className="h-full rounded-full bg-gradient-to-r from-[#15919B] to-[#2a7fa3]"
+                />
+              </div>
+
               <motion.button
                 type="button"
                 onClick={allShown ? showLess : showMore}
                 disabled={busy}
                 aria-disabled={busy}
-                whileHover={!busy ? { scale: 1.035, y: -2 } : undefined}
-                whileTap={!busy ? { scale: 0.97 } : undefined}
-                className="group inline-flex cursor-pointer items-center gap-2 rounded-full border-2 border-[#15919B] px-6 py-2.5 text-sm font-medium text-[#0F2E33] transition-all duration-300 hover:bg-[#15919B] hover:text-white disabled:cursor-not-allowed disabled:opacity-60 dark:border-[#15919B]/70 dark:text-slate-200 dark:hover:bg-[#15919B] dark:hover:text-white"
+                whileHover={!busy ? { scale: 1.04, y: -2 } : undefined}
+                whileTap={!busy ? { scale: 0.96 } : undefined}
+                transition={{ type: "spring", stiffness: 400, damping: 18 }}
+                className="group relative mt-1 inline-flex cursor-pointer items-center gap-2 overflow-hidden rounded-full border-2 border-[#15919B] px-6 py-2.5 text-sm font-medium text-[#0F2E33] transition-colors duration-300 hover:bg-[#15919B] hover:text-white disabled:cursor-not-allowed disabled:opacity-60 dark:border-[#15919B]/70 dark:text-slate-200 dark:hover:bg-[#15919B] dark:hover:text-white"
               >
-                {allShown ? "Show less" : `Show more (${nextCount} more)`}
+                {/* Label swaps with a short slide */}
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.span
+                    key={allShown ? "less" : "more"}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.16 }}
+                  >
+                    {allShown ? "Show less" : `Show more (${nextCount} more)`}
+                  </motion.span>
+                </AnimatePresence>
 
                 <motion.span
                   animate={{ rotate: allShown ? 180 : 0 }}
-                  transition={{ duration: 0.3, ease: EASE }}
+                  transition={{ type: "spring", stiffness: 260, damping: 18 }}
                   className="flex"
                 >
                   <ChevronDown aria-hidden="true" className="h-4 w-4" />
