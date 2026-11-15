@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { CSSProperties, PointerEvent, ReactNode, SVGProps } from "react";
 import { ArrowRight, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   AnimatePresence,
   motion,
+  useInView,
   useMotionValue,
   useReducedMotion,
   useSpring,
@@ -352,6 +353,72 @@ const FloatingSocial = ({
   );
 };
 
+/* ---------- Animated top border (replaces the static border-t) ---------- */
+const AnimatedBorder = ({ reduceMotion }: { reduceMotion: boolean }) => {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const inView = useInView(ref, { once: true, margin: "0px 0px -10% 0px" });
+  const on = reduceMotion || inView;
+
+  return (
+    <div
+      ref={ref}
+      aria-hidden
+      className="pointer-events-none absolute inset-x-0 top-0 z-20 h-[2px]"
+    >
+      {/* Faint static track */}
+      <span className="absolute inset-x-0 top-0 h-px bg-[#0E1525]/10 dark:bg-white/10" />
+
+      {/* Glowing line that draws left to right and fades toward the end */}
+      <motion.span
+        initial={{ scaleX: reduceMotion ? 1 : 0 }}
+        animate={{ scaleX: on ? 1 : 0 }}
+        transition={{ duration: 1.4, ease: EASE }}
+        style={{ originX: 0 }}
+        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-[#15919B] via-[#2a7fa3]/70 to-transparent shadow-[0_0_12px_rgba(21,145,155,0.6)]"
+      />
+
+      {!reduceMotion && (
+        <>
+          {/* Glowing head that leads the line */}
+          <motion.span
+            initial={{ left: "0%", opacity: 0 }}
+            animate={
+              on
+                ? { left: "100%", opacity: [0, 1, 1, 0] }
+                : { left: "0%", opacity: 0 }
+            }
+            transition={{
+              duration: 1.4,
+              ease: EASE,
+              opacity: { duration: 1.4, times: [0, 0.1, 0.85, 1] },
+            }}
+            style={{ y: "-20%" }}
+            className="absolute top-0 -ml-[3px] h-1.5 w-1.5 rounded-full bg-[#15919B] shadow-[0_0_10px_3px_rgba(21,145,155,0.7)]"
+          />
+
+          {/* Shine that keeps passing along the line */}
+          <motion.span
+            initial={{ left: "-10%", opacity: 0 }}
+            animate={
+              on
+                ? { left: ["-10%", "100%"], opacity: [0, 1, 1, 0] }
+                : { left: "-10%", opacity: 0 }
+            }
+            transition={{
+              duration: 2.4,
+              ease: "easeInOut",
+              repeat: Infinity,
+              repeatDelay: 4,
+              delay: 1.8,
+            }}
+            className="absolute top-0 -ml-12 h-px w-24 bg-gradient-to-r from-transparent via-[#15919B] to-transparent"
+          />
+        </>
+      )}
+    </div>
+  );
+};
+
 /* ---------- Component ---------- */
 const LetsTalk = () => {
   const reduceMotion = Boolean(useReducedMotion());
@@ -378,8 +445,11 @@ const LetsTalk = () => {
       viewport={{ once: true, amount: 0.25 }}
       onPointerMove={handleMove}
       onPointerLeave={handleLeave}
-      className="isolate overflow-hidden px-5 py-16 text-neutral-900 relative bg-white transition-colors duration-300 dark:bg-[#050505] dark:text-white sm:px-6 sm:py-24 md:px-10 md:py-30 mx-auto border-t border-[#0E1525]/10 dark:border-white/10"
+      className="isolate overflow-hidden px-5 py-16 text-neutral-900 relative bg-white transition-colors duration-300 dark:bg-[#050505] dark:text-white sm:px-6 sm:py-24 md:px-10 md:py-30 mx-auto"
     >
+      {/* Top border: glowing line draws itself, then a shine keeps passing */}
+      <AnimatedBorder reduceMotion={reduceMotion} />
+
       {/* Looping CSS animations (float, ripple, dash, twinkle) */}
       <style>{`
         @keyframes lt-float {

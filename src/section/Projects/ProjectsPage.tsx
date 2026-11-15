@@ -7,6 +7,7 @@ import {
   animate,
   useMotionTemplate,
   useMotionValue,
+  useInView as useFramerInView,
   useReducedMotion,
   useTransform,
   type Variants,
@@ -464,6 +465,199 @@ const ImagePreviewModal: FC<{
     </motion.div>,
     document.body,
   );
+
+/* ---------- Animated top border (replaces a static border-t) ---------- */
+
+const AnimatedBorder: FC = () => {
+  const reduce = Boolean(useReducedMotion());
+  const ref = useRef<HTMLDivElement | null>(null);
+  const inView = useFramerInView(ref, {
+    once: true,
+    margin: "0px 0px -10% 0px",
+  });
+  const on = reduce || inView;
+
+  return (
+    <div
+      ref={ref}
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-x-0 top-0 h-[2px]"
+    >
+      {/* Faint static track */}
+      <span className="absolute inset-x-0 top-0 h-px bg-black/10 dark:bg-white/10" />
+
+      {/* Glowing line that draws left to right and fades toward the end */}
+      <motion.span
+        initial={{ scaleX: reduce ? 1 : 0 }}
+        animate={{ scaleX: on ? 1 : 0 }}
+        transition={{ duration: 1.4, ease }}
+        style={{ originX: 0 }}
+        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-[#15919B] via-[#2a7fa3]/70 to-transparent shadow-[0_0_12px_rgba(21,145,155,0.6)]"
+      />
+
+      {!reduce && (
+        <>
+          {/* Glowing head that leads the line */}
+          <motion.span
+            initial={{ left: "0%", opacity: 0 }}
+            animate={
+              on
+                ? { left: "100%", opacity: [0, 1, 1, 0] }
+                : { left: "0%", opacity: 0 }
+            }
+            transition={{
+              duration: 1.4,
+              ease,
+              opacity: { duration: 1.4, times: [0, 0.1, 0.85, 1] },
+            }}
+            style={{ y: "-50%" }}
+            className="absolute top-0 -ml-[3px] h-1.5 w-1.5 rounded-full bg-[#15919B] shadow-[0_0_10px_3px_rgba(21,145,155,0.7)]"
+          />
+
+          {/* Shine that keeps passing along the line */}
+          <motion.span
+            initial={{ left: "-10%", opacity: 0 }}
+            animate={
+              on
+                ? { left: ["-10%", "100%"], opacity: [0, 1, 1, 0] }
+                : { left: "-10%", opacity: 0 }
+            }
+            transition={{
+              duration: 2.4,
+              ease: "easeInOut",
+              repeat: Infinity,
+              repeatDelay: 4,
+              delay: 1.8,
+            }}
+            className="absolute top-0 -ml-12 h-px w-24 bg-gradient-to-r from-transparent via-[#15919B] to-transparent"
+          />
+        </>
+      )}
+    </div>
+  );
+};
+
+/* ---------- Section divider: glow draws out from the centre ---------- */
+
+const SectionDivider: FC = () => {
+  const reduce = Boolean(useReducedMotion());
+  const ref = useRef<HTMLDivElement | null>(null);
+  const inView = useFramerInView(ref, {
+    once: true,
+    margin: "0px 0px -15% 0px",
+  });
+  const on = reduce || inView;
+
+  return (
+    <div ref={ref} aria-hidden="true" className="relative my-16 h-2 sm:my-20">
+      {/* Faint static track */}
+      <span className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-gradient-to-r from-transparent via-slate-300 to-transparent dark:via-white/15" />
+
+      {/* Glow line: left half draws out to the left, right half to the right */}
+      <motion.span
+        initial={{ scaleX: reduce ? 1 : 0 }}
+        animate={{ scaleX: on ? 1 : 0 }}
+        transition={{ duration: 1.3, ease, delay: 0.1 }}
+        style={{ originX: 1, y: "-50%" }}
+        className="absolute right-1/2 top-1/2 h-px w-1/2 bg-gradient-to-l from-[#15919B] via-[#2a7fa3]/60 to-transparent shadow-[0_0_12px_rgba(21,145,155,0.55)]"
+      />
+      <motion.span
+        initial={{ scaleX: reduce ? 1 : 0 }}
+        animate={{ scaleX: on ? 1 : 0 }}
+        transition={{ duration: 1.3, ease, delay: 0.1 }}
+        style={{ originX: 0, y: "-50%" }}
+        className="absolute left-1/2 top-1/2 h-px w-1/2 bg-gradient-to-r from-[#15919B] via-[#2a7fa3]/60 to-transparent shadow-[0_0_12px_rgba(21,145,155,0.55)]"
+      />
+
+      {!reduce && (
+        <>
+          {/* Glowing heads that lead each half outward */}
+          {[
+            { to: "100%", key: "right" },
+            { to: "0%", key: "left" },
+          ].map(({ to, key }) => (
+            <motion.span
+              key={key}
+              initial={{ left: "50%", opacity: 0 }}
+              animate={
+                on
+                  ? { left: to, opacity: [0, 1, 1, 0] }
+                  : { left: "50%", opacity: 0 }
+              }
+              transition={{
+                duration: 1.3,
+                ease,
+                delay: 0.1,
+                opacity: {
+                  duration: 1.3,
+                  delay: 0.1,
+                  times: [0, 0.1, 0.85, 1],
+                },
+              }}
+              style={{ x: "-50%", y: "-50%" }}
+              className="absolute top-1/2 h-1.5 w-1.5 rounded-full bg-[#15919B] shadow-[0_0_10px_3px_rgba(21,145,155,0.7)]"
+            />
+          ))}
+
+          {/* Shines that keep travelling outward from the centre */}
+          {[
+            { to: "100%", key: "right" },
+            { to: "0%", key: "left" },
+          ].map(({ to, key }) => (
+            <motion.span
+              key={`shine-${key}`}
+              initial={{ left: "50%", opacity: 0 }}
+              animate={
+                on
+                  ? { left: ["50%", to], opacity: [0, 1, 1, 0] }
+                  : { left: "50%", opacity: 0 }
+              }
+              transition={{
+                duration: 2.6,
+                ease: "easeInOut",
+                repeat: Infinity,
+                repeatDelay: 4,
+                delay: 2,
+              }}
+              style={{ x: "-50%", y: "-50%" }}
+              className="absolute top-1/2 h-px w-24 bg-gradient-to-r from-transparent via-[#15919B] to-transparent"
+            />
+          ))}
+
+          {/* Pulsing ring around the centre dot */}
+          <motion.span
+            initial={{ scale: 1, opacity: 0 }}
+            animate={
+              on ? { scale: [1, 3.2], opacity: [0.55, 0] } : { opacity: 0 }
+            }
+            transition={{
+              duration: 2.4,
+              ease: "easeOut",
+              repeat: Infinity,
+              delay: 0.9,
+            }}
+            style={{ x: "-50%", y: "-50%" }}
+            className="absolute left-1/2 top-1/2 h-2 w-2 rounded-full border border-[#15919B]"
+          />
+        </>
+      )}
+
+      {/* Centre dot pops in */}
+      <motion.span
+        initial={{ scale: reduce ? 1 : 0, opacity: reduce ? 1 : 0 }}
+        animate={on ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
+        transition={{
+          type: "spring",
+          stiffness: 400,
+          damping: 14,
+          delay: 0.1,
+        }}
+        style={{ x: "-50%", y: "-50%" }}
+        className="absolute left-1/2 top-1/2 h-2 w-2 rounded-full bg-[#15919B] shadow-[0_0_10px_2px_rgba(21,145,155,0.6)]"
+      />
+    </div>
+  );
+};
 
 /* ---------- Project Card ---------- */
 
@@ -1328,6 +1522,9 @@ export default function ProjectsPage() {
         />
 
         <div className="relative mx-auto mt-0 max-w-7xl px-5 py-20 sm:px-6 sm:py-24 md:px-10 md:py-30">
+          {/* Top border: glowing line draws itself, then a shine keeps passing */}
+          <AnimatedBorder />
+
           {/* Eyebrow */}
 
           <motion.div
@@ -1385,46 +1582,10 @@ export default function ProjectsPage() {
             />
           )}
 
-          {/* Section Divider: line draws out from the centre, dot pops in */}
+          {/* Section Divider: glow draws out from the centre, dot pulses */}
 
           {completedProjects.length > 0 && upcomingProjects.length > 0 && (
-            <div className="relative my-16 sm:my-20">
-              <motion.div
-                initial={{
-                  opacity: 0,
-                  scaleX: 0,
-                }}
-                whileInView={{
-                  opacity: 1,
-                  scaleX: 1,
-                }}
-                viewport={{
-                  once: true,
-                  amount: 0.5,
-                }}
-                transition={{
-                  duration: 1,
-                  ease,
-                }}
-                className="origin-center"
-              >
-                <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-300 to-transparent dark:via-white/15" />
-              </motion.div>
-
-              <motion.span
-                aria-hidden="true"
-                initial={{ scale: 0, opacity: 0 }}
-                whileInView={{ scale: 1, opacity: 1 }}
-                viewport={{ once: true, amount: 0.5 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 400,
-                  damping: 14,
-                  delay: 0.5,
-                }}
-                className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#15919B]"
-              />
-            </div>
+            <SectionDivider />
           )}
 
           {/* Upcoming Projects */}

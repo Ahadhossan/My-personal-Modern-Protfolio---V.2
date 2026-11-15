@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import type { PointerEvent } from "react";
 
 import { ChevronDown } from "lucide-react";
@@ -7,6 +7,7 @@ import {
   motion,
   useMotionTemplate,
   useMotionValue,
+  useInView,
   useReducedMotion,
   useSpring,
   useTransform,
@@ -173,6 +174,75 @@ const CompetencyCard: React.FC<CardProps> = ({
   );
 };
 
+/* ---------- Animated top border ---------- */
+
+const AnimatedBorder: React.FC<{ reduceMotion: boolean }> = ({
+  reduceMotion,
+}) => {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const inView = useInView(ref, { once: true, margin: "0px 0px -15% 0px" });
+  const on = reduceMotion || inView;
+
+  return (
+    <div
+      ref={ref}
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-x-0 top-0 h-[2px]"
+    >
+      {/* Faint static track */}
+      <span className="absolute inset-x-0 top-0 h-px bg-black/10 dark:bg-white/10" />
+
+      {/* Glowing line that draws left to right and fades out toward the end */}
+      <motion.span
+        initial={{ scaleX: reduceMotion ? 1 : 0 }}
+        animate={{ scaleX: on ? 1 : 0 }}
+        transition={{ duration: 1.4, ease: EASE }}
+        style={{ originX: 0 }}
+        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-[#15919B] via-[#2a7fa3]/70 to-transparent shadow-[0_0_12px_rgba(21,145,155,0.6)]"
+      />
+
+      {!reduceMotion && (
+        <>
+          {/* Glowing head that leads the line */}
+          <motion.span
+            initial={{ left: "0%", opacity: 0 }}
+            animate={
+              on
+                ? { left: "100%", opacity: [0, 1, 1, 0] }
+                : { left: "0%", opacity: 0 }
+            }
+            transition={{
+              duration: 1.4,
+              ease: EASE,
+              opacity: { duration: 1.4, times: [0, 0.1, 0.85, 1] },
+            }}
+            style={{ y: "-50%" }}
+            className="absolute top-0 -ml-[3px] h-1.5 w-1.5 rounded-full bg-[#15919B] shadow-[0_0_10px_3px_rgba(21,145,155,0.7)]"
+          />
+
+          {/* Shine that keeps passing along the line */}
+          <motion.span
+            initial={{ left: "-10%", opacity: 0 }}
+            animate={
+              on
+                ? { left: ["-10%", "100%"], opacity: [0, 1, 1, 0] }
+                : { left: "-10%", opacity: 0 }
+            }
+            transition={{
+              duration: 2.4,
+              ease: "easeInOut",
+              repeat: Infinity,
+              repeatDelay: 4,
+              delay: 1.8,
+            }}
+            className="absolute top-0 -ml-12 h-px w-24 bg-gradient-to-r from-transparent via-[#15919B] to-transparent"
+          />
+        </>
+      )}
+    </div>
+  );
+};
+
 /* ---------- Section ---------- */
 
 const HEADING_WORDS = "CORE COMPETENCIES".split(" ");
@@ -192,9 +262,12 @@ const Competencies: React.FC = () => {
   return (
     <section
       id="competencies"
-      className="relative border-t border-black/10 bg-white transition-colors duration-300 dark:border-slate-800 dark:bg-[#050505]"
+      className="relative bg-white transition-colors duration-300 dark:bg-[#050505]"
     >
-      <div className="mx-auto max-w-7xl px-5 py-20 sm:px-6 sm:py-24 md:px-10 md:py-30">
+      <div className="relative mx-auto max-w-7xl px-5 py-20 sm:px-6 sm:py-24 md:px-10 md:py-30">
+        {/* Top border: glowing line draws itself, then a shine keeps passing */}
+        <AnimatedBorder reduceMotion={reduceMotion} />
+
         {/* Header: eyebrow, then heading words */}
         <motion.div
           variants={reduceMotion ? still : headerVariants}
