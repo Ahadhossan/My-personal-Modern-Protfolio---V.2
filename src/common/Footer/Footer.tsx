@@ -3,9 +3,16 @@
 import { useEffect, useState, type SVGProps } from "react";
 import { Heart } from "lucide-react";
 import { FaGithub, FaLinkedin, FaWhatsapp } from "react-icons/fa6";
-import { motion, useReducedMotion, type Variants } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useReducedMotion,
+  type Variants,
+} from "framer-motion";
 
 type SvgProps = SVGProps<SVGSVGElement>;
+
+const EASE = [0.22, 1, 0.36, 1] as const;
 
 const Gem = (p: SvgProps) => (
   <svg viewBox="0 0 320 240" fill="none" {...p}>
@@ -60,29 +67,106 @@ const socials = [
   },
 ];
 
-const footerItems: Variants = {
-  hidden: { opacity: 0, y: 22 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
-  },
+/* ---------- Variants ---------- */
+
+// Reduced-motion fallback: everything is simply visible
+const still: Variants = {
+  hidden: { opacity: 1 },
+  visible: { opacity: 1 },
 };
 
 const footerContent: Variants = {
   hidden: {},
+  visible: { transition: { staggerChildren: 0.14, delayChildren: 0.08 } },
+};
+
+const footerItems: Variants = {
+  hidden: { opacity: 0, y: 24, filter: "blur(6px)" },
   visible: {
-    transition: { staggerChildren: 0.14, delayChildren: 0.08 },
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.7, ease: EASE },
+  },
+};
+
+// Logo letters slide up from behind a mask
+const logoVariants: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.06 } },
+};
+
+const letterVariants: Variants = {
+  hidden: { y: "110%" },
+  visible: { y: "0%", transition: { duration: 0.6, ease: EASE } },
+};
+
+// Headline lines slide up one after another
+const headingVariants: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.13 } },
+};
+
+const lineVariants: Variants = {
+  hidden: { y: "110%" },
+  visible: { y: "0%", transition: { duration: 0.75, ease: EASE } },
+};
+
+const barVariants: Variants = {
+  hidden: { scaleX: 0 },
+  visible: { scaleX: 1, transition: { duration: 0.9, ease: EASE } },
+};
+
+const dotVariants: Variants = {
+  hidden: { scale: 0, opacity: 0 },
+  visible: {
+    scale: 1,
+    opacity: 1,
+    transition: { type: "spring", stiffness: 500, damping: 14, delay: 0.7 },
   },
 };
 
 const socialIcon: Variants = {
-  hidden: { opacity: 0, scale: 0.7, rotate: -18 },
+  hidden: { opacity: 0, scale: 0.6, rotate: -24 },
   visible: {
     opacity: 1,
     scale: 1,
     rotate: 0,
-    transition: { type: "spring", stiffness: 300, damping: 18 },
+    transition: { type: "spring", stiffness: 300, damping: 16 },
+  },
+};
+
+// Signature is "written" left to right
+const signatureVariants: Variants = {
+  hidden: { clipPath: "inset(0 100% 0 0)", opacity: 0.4 },
+  visible: {
+    clipPath: "inset(0 0% 0 0)",
+    opacity: 1,
+    transition: { duration: 1.5, ease: "easeInOut", delay: 0.25 },
+  },
+};
+
+const gemVariants: Variants = {
+  hidden: { opacity: 0, scale: 0.7, rotate: -8 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    rotate: 0,
+    transition: { type: "spring", stiffness: 120, damping: 14, delay: 0.2 },
+  },
+};
+
+const lineDrawVariants: Variants = {
+  hidden: { scaleX: 0 },
+  visible: { scaleX: 1, transition: { duration: 1.1, ease: EASE } },
+};
+
+const waveVariants: Variants = {
+  hidden: { pathLength: 0, opacity: 0 },
+  visible: {
+    pathLength: 1,
+    opacity: 1,
+    transition: { duration: 2, ease: "easeInOut", delay: 0.4 },
   },
 };
 
@@ -106,63 +190,124 @@ const useLocalTime = (timeZone: string) => {
   return time;
 };
 
+/* ---------- Small pieces ---------- */
+
+// Gradient underline + dot, drawn in on scroll
+const AccentBar = ({ reduceMotion }: { reduceMotion: boolean }) => (
+  <div className="mt-4 mb-0 flex items-start justify-start gap-1.5">
+    <motion.i
+      variants={reduceMotion ? still : barVariants}
+      style={{ originX: 0 }}
+      className="block h-[3px] w-[170px] rounded-sm bg-gradient-to-r from-[#8fc4dc] to-[#487081]"
+    />
+    <motion.b
+      variants={reduceMotion ? still : dotVariants}
+      className="h-1.5 w-1.5 rounded-full bg-[#2a7fa3]"
+    />
+  </div>
+);
+
+// Mask wrapper so text can slide up from behind a clean edge
+const Mask = ({ children }: { children: React.ReactNode }) => (
+  <span className="block overflow-hidden pb-1">{children}</span>
+);
+
 /* ---------- Component ---------- */
 const Footer = () => {
   const time = useLocalTime("Asia/Dhaka");
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = Boolean(useReducedMotion());
+
+  const item = reduceMotion ? still : footerItems;
 
   return (
     <motion.footer
-      initial={reduceMotion ? "visible" : "hidden"}
+      initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.12 }}
-      variants={footerContent}
+      variants={reduceMotion ? still : footerContent}
       className="relative isolate overflow-hidden bg-[#070d18] text-slate-200"
     >
-      {/* Background glows */}
-      <div
+      {/* Background glows: slow ambient drift */}
+      <motion.div
         aria-hidden
+        animate={
+          reduceMotion
+            ? undefined
+            : { x: [0, 40, 0], y: [0, 24, 0], scale: [1, 1.12, 1] }
+        }
+        transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
         className="absolute -left-32 -top-32 -z-10 h-[300px] w-[360px] rounded-full bg-blue-900/40 blur-[100px] sm:-left-40 sm:-top-40 sm:h-[400px] sm:w-[500px] sm:blur-[120px]"
       />
-      <div
+      <motion.div
         aria-hidden
+        animate={
+          reduceMotion
+            ? undefined
+            : { x: [0, -36, 0], y: [0, 30, 0], scale: [1, 1.1, 1] }
+        }
+        transition={{
+          duration: 17,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 2,
+        }}
         className="absolute -right-24 -top-24 -z-10 h-[260px] w-[300px] rounded-full bg-teal-500/15 blur-[100px] sm:-right-32 sm:-top-32 sm:h-[360px] sm:w-[420px] sm:blur-[120px]"
       />
 
-      {/* Decorative waves */}
+      {/* Decorative wave: draws itself */}
       <svg
         aria-hidden
         viewBox="0 0 200 200"
         className="absolute bottom-16 left-0 -z-10 hidden h-40 w-40 text-teal-400/60 lg:block"
       >
-        <path
+        <motion.path
           d="M0 40c40 20 50 90 100 120"
           fill="none"
           stroke="currentColor"
           strokeWidth="1.5"
+          variants={reduceMotion ? still : waveVariants}
         />
       </svg>
 
-      <motion.div
-        className="mx-auto max-w-7xl px-4 pb-8 pt-12 sm:px-6 sm:pt-16 lg:px-8 lg:pt-20"
-        variants={footerContent}
-      >
+      <div className="mx-auto max-w-7xl px-4 pb-8 pt-12 sm:px-6 sm:pt-16 lg:px-8 lg:pt-20">
         <div className="grid gap-12 lg:grid-cols-2 lg:items-center lg:gap-16">
           {/* Brand */}
-          <motion.div variants={footerItems}>
+          <div>
             <motion.a
               href="#"
-              variants={footerItems}
-              whileHover={reduceMotion ? undefined : { x: 2 }}
+              aria-label="AHAD.DEV"
+              variants={reduceMotion ? still : logoVariants}
+              whileHover={reduceMotion ? undefined : { x: 3 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
               className="inline-flex items-center gap-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-400"
             >
-              <span className="text-2xl font-bold tracking-[0.12em] text-white sm:text-3xl">
-                AHAD<span className="text-teal-400">.DEV</span>
+              <span
+                aria-hidden
+                className="flex overflow-hidden pb-1 text-2xl font-bold tracking-[0.12em] text-white sm:text-3xl"
+              >
+                {"AHAD".split("").map((ch, i) => (
+                  <motion.span
+                    key={`a-${i}`}
+                    variants={reduceMotion ? still : letterVariants}
+                    className="inline-block"
+                  >
+                    {ch}
+                  </motion.span>
+                ))}
+                {".DEV".split("").map((ch, i) => (
+                  <motion.span
+                    key={`d-${i}`}
+                    variants={reduceMotion ? still : letterVariants}
+                    className="inline-block text-teal-400"
+                  >
+                    {ch}
+                  </motion.span>
+                ))}
               </span>
             </motion.a>
 
             <motion.p
-              variants={footerItems}
+              variants={item}
               className="mt-5 max-w-md text-sm leading-7 text-gray-400 sm:text-[15px]"
             >
               Frontend Developer <span className="mx-2 text-teal-400">•</span>{" "}
@@ -170,43 +315,36 @@ const Footer = () => {
               <br className="hidden sm:block" /> HMS/PMS Specialist
             </motion.p>
 
-            <div className="mt-4 mb-0 flex items-start justify-start gap-1.5">
-              <i className="block h-[3px] w-[170px] rounded-sm bg-gradient-to-r from-[#8fc4dc] to-[#487081]" />
-              <b className="h-1.5 w-1.5 rounded-full bg-[#2a7fa3]" />
-            </div>
-
-            {/* <p className="mt-5 max-w-sm text-sm leading-7 text-gray-400 sm:text-[15px]">
-              Building modern web experiences with clean code, creative design
-              and a focus on real user needs.
-            </p> */}
+            <AccentBar reduceMotion={reduceMotion} />
 
             <motion.ul
-              variants={footerContent}
+              variants={reduceMotion ? still : footerContent}
               className="mt-6 flex flex-wrap gap-3"
             >
               {socials.map((s) => (
-                <motion.li key={s.label} variants={footerItems}>
+                <motion.li key={s.label} variants={item}>
                   <motion.a
                     href={s.href}
                     aria-label={s.label}
                     target={s.href.startsWith("http") ? "_blank" : undefined}
                     rel="noreferrer"
-                    variants={footerItems}
                     whileHover={
-                      reduceMotion ? undefined : { y: -3, scale: 1.04 }
+                      reduceMotion ? undefined : { y: -4, scale: 1.08 }
                     }
-                    whileTap={reduceMotion ? undefined : { scale: 0.96 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                    className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-white transition hover:border-teal-400/60 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-400 sm:h-12 sm:w-12"
+                    whileTap={reduceMotion ? undefined : { scale: 0.92 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 18 }}
+                    className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-white transition-[border-color,background-color,box-shadow] duration-300 hover:border-teal-400/60 hover:bg-white/10 hover:shadow-[0_0_24px_-4px_rgba(45,212,191,0.55)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-400 sm:h-12 sm:w-12"
                   >
                     <motion.span
-                      variants={socialIcon}
+                      variants={reduceMotion ? still : socialIcon}
                       whileHover={
                         reduceMotion
                           ? undefined
-                          : { rotate: [0, -5, 5, 0], scale: 1.08 }
+                          : {
+                              rotate: [0, -10, 10, 0],
+                              transition: { duration: 0.4 },
+                            }
                       }
-                      transition={{ duration: 0.35 }}
                       className="flex"
                     >
                       {s.icon}
@@ -215,35 +353,48 @@ const Footer = () => {
                 </motion.li>
               ))}
             </motion.ul>
-          </motion.div>
+          </div>
 
           {/* Keep exploring */}
-          <motion.div
-            variants={footerItems}
-            className="flex flex-col gap-8 sm:flex-row sm:items-center sm:justify-between lg:justify-end lg:gap-12"
-          >
+          <div className="flex flex-col gap-8 sm:flex-row sm:items-center sm:justify-between lg:justify-end lg:gap-12">
             <div>
               <motion.p
-                variants={footerItems}
+                variants={item}
                 className="text-xs uppercase tracking-[0.3em] text-slate-400 sm:text-sm"
               >
                 Keep Exploring
               </motion.p>
+
               <motion.h3
-                variants={footerItems}
+                aria-label="Better ideas. Bigger impact."
+                variants={reduceMotion ? still : headingVariants}
                 className="mt-4 text-3xl font-medium leading-tight text-white sm:mt-5 sm:text-4xl"
               >
-                Better ideas.
-                <br />
-                <span className="text-teal-400">Bigger</span> impact.
+                <Mask>
+                  <motion.span
+                    aria-hidden
+                    variants={reduceMotion ? still : lineVariants}
+                    className="block"
+                  >
+                    Better ideas.
+                  </motion.span>
+                </Mask>
+                <Mask>
+                  <motion.span
+                    aria-hidden
+                    variants={reduceMotion ? still : lineVariants}
+                    className="block"
+                  >
+                    <span className="text-teal-400">Bigger</span> impact.
+                  </motion.span>
+                </Mask>
               </motion.h3>
-              <div className="mt-4 mb-0 flex items-start justify-start gap-1.5">
-                <i className="block h-[3px] w-[170px] rounded-sm bg-gradient-to-r from-[#8fc4dc] to-[#487081]" />
-                <b className="h-1.5 w-1.5 rounded-full bg-[#2a7fa3]" />
-              </div>
+
+              <AccentBar reduceMotion={reduceMotion} />
+
               <motion.p
-                variants={footerItems}
-                className="mt-5 text-2xl italic text-slate-300 sm:mt-6 sm:text-3xl"
+                variants={reduceMotion ? still : signatureVariants}
+                className="mt-5 pr-3 text-2xl italic text-slate-300 sm:mt-6 sm:text-3xl"
                 style={{
                   fontFamily: "'Mrs Saint Delafield', 'Segoe Script', cursive",
                 }}
@@ -251,38 +402,86 @@ const Footer = () => {
                 Ahad Hossain
               </motion.p>
             </div>
-            <Gem
-              aria-hidden
-              className="mx-auto aspect-[4/3] h-36 w-auto shrink-0 sm:mx-0 sm:h-44 lg:h-52"
-            />
-          </motion.div>
+
+            {/* Gem: springs in, then floats with a pulsing glow */}
+            <motion.div
+              variants={reduceMotion ? still : gemVariants}
+              className="mx-auto shrink-0 sm:mx-0"
+            >
+              <motion.div
+                animate={
+                  reduceMotion
+                    ? undefined
+                    : {
+                        y: [0, -12, 0],
+                        rotate: [0, 1.5, 0],
+                        filter: [
+                          "drop-shadow(0 0 0px rgba(34,211,238,0))",
+                          "drop-shadow(0 0 18px rgba(34,211,238,0.35))",
+                          "drop-shadow(0 0 0px rgba(34,211,238,0))",
+                        ],
+                      }
+                }
+                transition={{
+                  duration: 6,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              >
+                <Gem
+                  aria-hidden
+                  className="aspect-[4/3] h-36 w-auto sm:h-44 lg:h-52"
+                />
+              </motion.div>
+            </motion.div>
+          </div>
         </div>
 
         {/* Bottom bar:
             mobile/tablet -> stacked + centered
             desktop (lg)  -> copyright | local time | built with me */}
         <motion.div
-          variants={footerItems}
-          className="mt-12 grid gap-4 border-t border-white/10 pt-6 text-center text-xs text-gray-400 sm:mt-14 sm:text-sm lg:grid-cols-[1fr_auto_1fr] lg:items-center"
+          variants={item}
+          className="relative mt-12 grid gap-4 pt-6 text-center text-xs text-gray-400 sm:mt-14 sm:text-sm lg:grid-cols-[1fr_auto_1fr] lg:items-center"
         >
-          <motion.p
-            variants={footerItems}
-            className="flex items-center justify-center gap-3 lg:justify-self-start lg:text-left"
-          >
+          {/* Top border draws from left to right */}
+          <motion.span
+            aria-hidden
+            variants={reduceMotion ? still : lineDrawVariants}
+            style={{ originX: 0 }}
+            className="absolute inset-x-0 top-0 h-px bg-white/10"
+          />
+
+          <p className="flex items-center justify-center gap-3 lg:justify-self-start lg:text-left">
             <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-teal-400" />
             &copy; 2026 Md. Ahad Hossain. All rights reserved.
-          </motion.p>
+          </p>
 
           {/* Local time + response time */}
-          <div className="flex max-w-full flex-col items-center gap-1 justify-self-center rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-slate-300 sm:flex-row sm:gap-3 sm:rounded-full sm:py-2">
+          <motion.div
+            whileHover={reduceMotion ? undefined : { y: -2 }}
+            className="flex max-w-full flex-col items-center gap-1 justify-self-center rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-slate-300 transition-colors duration-300 hover:border-teal-400/30 sm:flex-row sm:gap-3 sm:rounded-full sm:py-2"
+          >
             <span className="flex items-center gap-2 whitespace-nowrap">
               <span className="relative flex h-2 w-2 shrink-0">
                 <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 motion-safe:animate-ping" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
               </span>
               Bangladesh
-              <span className="inline-block min-w-[4.5rem] text-center font-semibold tabular-nums text-white">
-                {time || "--:--"}
+              {/* Time slides when the minute changes */}
+              <span className="relative inline-flex min-w-[4.5rem] justify-center overflow-hidden font-semibold tabular-nums text-white">
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.span
+                    key={time || "empty"}
+                    initial={reduceMotion ? false : { y: "100%", opacity: 0 }}
+                    animate={{ y: "0%", opacity: 1 }}
+                    exit={reduceMotion ? undefined : { y: "-100%", opacity: 0 }}
+                    transition={{ duration: 0.25, ease: "easeOut" }}
+                    className="inline-block"
+                  >
+                    {time || "--:--"}
+                  </motion.span>
+                </AnimatePresence>
               </span>
               (GMT+6)
             </span>
@@ -290,17 +489,29 @@ const Footer = () => {
               |
             </span>
             <span>Usually replies within 24 hours</span>
-          </div>
+          </motion.div>
 
-          <motion.p
-            variants={footerItems}
-            className="flex items-center justify-center gap-2 lg:justify-self-end"
-          >
-            <Heart className="h-4 w-4 fill-teal-400 text-teal-400" />
+          <p className="flex items-center justify-center gap-2 lg:justify-self-end">
+            {/* Heartbeat */}
+            <motion.span
+              aria-hidden
+              animate={
+                reduceMotion ? undefined : { scale: [1, 1.28, 1, 1.18, 1] }
+              }
+              transition={{
+                duration: 1.4,
+                repeat: Infinity,
+                repeatDelay: 1.2,
+                ease: "easeInOut",
+              }}
+              className="flex"
+            >
+              <Heart className="h-4 w-4 fill-teal-400 text-teal-400" />
+            </motion.span>
             Built with Me
-          </motion.p>
+          </p>
         </motion.div>
-      </motion.div>
+      </div>
     </motion.footer>
   );
 };

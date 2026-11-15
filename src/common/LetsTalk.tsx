@@ -1,9 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import type { CSSProperties, MouseEvent, ReactNode, SVGProps } from "react";
+import { useState } from "react";
+import type { CSSProperties, PointerEvent, ReactNode, SVGProps } from "react";
 import { ArrowRight, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useSpring,
+  useTransform,
+  type MotionValue,
+  type Variants,
+} from "framer-motion";
 
 /* ---------- Your links (edit these) ---------- */
 const EMAIL = "ahadm3016@gmail.com";
@@ -12,6 +22,8 @@ const LINKEDIN_URL = "https://www.linkedin.com/"; // TODO: your profile
 const FACEBOOK_URL = "https://www.facebook.com/"; // TODO: your profile
 const INSTAGRAM_URL = "https://www.instagram.com/"; // TODO: your profile
 const X_URL = "https://x.com/"; // TODO: your profile
+
+const EASE = [0.22, 1, 0.36, 1] as const;
 
 /* ---------- Brand icons (inline SVG, no extra dependency) ---------- */
 type IconProps = SVGProps<SVGSVGElement>;
@@ -77,7 +89,7 @@ const socials: Social[] = [
     color: "#333333",
     round: "rounded-full",
     size: "h-14 w-14",
-    pos: "left-[12%] top-[8%] xl:left-[18%]",
+    pos: "left-[12%] top-[10%] xl:left-[18%]",
     depth: 22,
     amp: "-10px",
   },
@@ -148,98 +160,227 @@ const sparkles = [
   { pos: "right-[21%] top-[62%]", size: "h-1 w-1", delay: "0.3s" },
 ];
 
-/* ---------- Scroll reveal hook ---------- */
-const useInView = <T extends HTMLElement>(threshold = 0.2) => {
-  const ref = useRef<T | null>(null);
-  const [inView, setInView] = useState(false);
+/* ---------- Variants ---------- */
 
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setInView(true);
-          observer.disconnect(); // animate only once
-        }
-      },
-      { threshold },
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [threshold]);
-
-  return { ref, inView };
+// Reduced-motion fallback: everything is simply visible
+const still: Variants = {
+  hidden: { opacity: 1 },
+  visible: { opacity: 1 },
 };
 
-const reveal = (inView: boolean) =>
-  `transition-all duration-700 ease-out motion-reduce:transition-none motion-reduce:transform-none ${
-    inView ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
-  }`;
+const headingVariants: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.14 } },
+};
 
-/* ---------- Icon-only social button (no text, no shadow) ---------- */
+// Each heading line slides up from behind a mask
+const lineVariants: Variants = {
+  hidden: { y: "110%" },
+  visible: { y: "0%", transition: { duration: 0.85, ease: EASE } },
+};
+
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 22, filter: "blur(6px)" },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.7, ease: EASE, delay: 0.35 },
+  },
+};
+
+const ctaVariants: Variants = {
+  hidden: { opacity: 0, y: 28, scale: 0.92 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { type: "spring", stiffness: 200, damping: 20, delay: 0.5 },
+  },
+};
+
+// Floating icons pop in one after another (custom = index)
+const iconVariants: Variants = {
+  hidden: { opacity: 0, scale: 0.4, rotate: -25 },
+  visible: (i: number) => ({
+    opacity: 1,
+    scale: 1,
+    rotate: 0,
+    transition: {
+      type: "spring",
+      stiffness: 220,
+      damping: 14,
+      delay: 0.45 + i * 0.1,
+    },
+  }),
+};
+
+const mobileIconVariants: Variants = {
+  hidden: { opacity: 0, y: 26, scale: 0.6 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 240,
+      damping: 16,
+      delay: 0.6 + i * 0.08,
+    },
+  }),
+};
+
+const orbitVariants: Variants = {
+  hidden: { opacity: 0, scale: 0.9 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 1.4, ease: EASE, delay: 0.2 },
+  },
+};
+
+/* ---------- Icon-only social button ---------- */
 const SocialButton = ({
   s,
   size,
   rippleDelay,
+  reduceMotion,
 }: {
   s: Social;
   size: string;
   rippleDelay: string;
+  reduceMotion: boolean;
 }) => {
   const external = !s.href.startsWith("mailto:");
+  const [active, setActive] = useState(false);
+
   return (
-    <a
-      href={s.href}
-      aria-label={s.label}
-      title={s.label}
-      target={external ? "_blank" : undefined}
-      rel={external ? "noreferrer" : undefined}
-      style={{ "--c": s.color } as CSSProperties}
-      className={`lt-social relative flex items-center justify-center border border-black/10 bg-white text-neutral-700 backdrop-blur dark:border-white/10 dark:bg-black/10 dark:text-white/80 ${s.round} ${size}`}
+    <span className={`relative block ${size}`}>
+      <motion.a
+        href={s.href}
+        aria-label={s.label}
+        target={external ? "_blank" : undefined}
+        rel={external ? "noreferrer" : undefined}
+        style={{ "--c": s.color } as CSSProperties}
+        onHoverStart={() => setActive(true)}
+        onHoverEnd={() => setActive(false)}
+        onFocus={() => setActive(true)}
+        onBlur={() => setActive(false)}
+        whileHover={reduceMotion ? undefined : { scale: 1.18, rotate: -8 }}
+        whileTap={reduceMotion ? undefined : { scale: 0.88 }}
+        transition={{ type: "spring", stiffness: 420, damping: 16 }}
+        className={`lt-social relative flex h-full w-full items-center justify-center border border-black/10 bg-white text-neutral-700 backdrop-blur dark:border-white/10 dark:bg-black/10 dark:text-white/80 ${s.round}`}
+      >
+        {/* soft ripple ring (border only, no shadow) */}
+        <span
+          aria-hidden
+          className={`lt-ripple pointer-events-none absolute inset-0 ${s.round}`}
+          style={{ animationDelay: rippleDelay }}
+        />
+        {s.icon}
+      </motion.a>
+
+      {/* Name tooltip (desktop hover / keyboard focus) */}
+      <AnimatePresence>
+        {active && (
+          <motion.span
+            aria-hidden
+            initial={reduceMotion ? false : { opacity: 0, y: 6, x: "-50%" }}
+            animate={{ opacity: 1, y: 0, x: "-50%" }}
+            exit={reduceMotion ? undefined : { opacity: 0, y: 4, x: "-50%" }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="pointer-events-none absolute -top-9 left-1/2 z-20 hidden whitespace-nowrap rounded-md bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white dark:bg-white dark:text-slate-900 lg:block"
+          >
+            {s.label}
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </span>
+  );
+};
+
+/* ---------- Floating icon: entrance -> mouse parallax -> float -> hover ---------- */
+const FloatingSocial = ({
+  s,
+  index,
+  mx,
+  my,
+  reduceMotion,
+}: {
+  s: Social;
+  index: number;
+  mx: MotionValue<number>;
+  my: MotionValue<number>;
+  reduceMotion: boolean;
+}) => {
+  const spring = { stiffness: 110, damping: 18, mass: 0.7 };
+  const x = useSpring(
+    useTransform(mx, (v) => v * s.depth),
+    spring,
+  );
+  const y = useSpring(
+    useTransform(my, (v) => v * s.depth),
+    spring,
+  );
+
+  return (
+    <motion.div
+      custom={index}
+      variants={reduceMotion ? still : iconVariants}
+      className={`absolute z-10 hidden lg:block ${s.pos}`}
     >
-      {/* soft ripple ring (border only, no shadow) */}
-      <span
-        aria-hidden
-        className={`lt-ripple pointer-events-none absolute inset-0 ${s.round}`}
-        style={{ animationDelay: rippleDelay }}
-      />
-      {s.icon}
-    </a>
+      <motion.div style={reduceMotion ? undefined : { x, y }}>
+        <div
+          className="lt-float"
+          style={
+            {
+              "--d": `${5 + (index % 3)}s`,
+              "--delay": `${index * 0.5}s`,
+              "--amp": s.amp,
+            } as CSSProperties
+          }
+        >
+          <SocialButton
+            s={s}
+            size={s.size}
+            rippleDelay={`${index * 0.6}s`}
+            reduceMotion={reduceMotion}
+          />
+        </div>
+      </motion.div>
+    </motion.div>
   );
 };
 
 /* ---------- Component ---------- */
 const LetsTalk = () => {
-  const { ref, inView } = useInView<HTMLElement>(0.25);
+  const reduceMotion = Boolean(useReducedMotion());
 
-  // Mouse parallax: only sets CSS variables, so no re-render happens
-  const handleMove = (e: MouseEvent<HTMLElement>) => {
+  // Mouse parallax: motion values (spring-smoothed per icon), no re-render
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+
+  const handleMove = (e: PointerEvent<HTMLElement>) => {
+    if (reduceMotion || e.pointerType !== "mouse") return;
     const r = e.currentTarget.getBoundingClientRect();
-    e.currentTarget.style.setProperty(
-      "--mx",
-      ((e.clientX - r.left) / r.width - 0.5).toFixed(3),
-    );
-    e.currentTarget.style.setProperty(
-      "--my",
-      ((e.clientY - r.top) / r.height - 0.5).toFixed(3),
-    );
+    mx.set((e.clientX - r.left) / r.width - 0.5);
+    my.set((e.clientY - r.top) / r.height - 0.5);
   };
-  const handleLeave = (e: MouseEvent<HTMLElement>) => {
-    e.currentTarget.style.setProperty("--mx", "0");
-    e.currentTarget.style.setProperty("--my", "0");
+  const handleLeave = () => {
+    mx.set(0);
+    my.set(0);
   };
 
   return (
-    <section
-      ref={ref}
-      onMouseMove={handleMove}
-      onMouseLeave={handleLeave}
+    <motion.section
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.25 }}
+      onPointerMove={handleMove}
+      onPointerLeave={handleLeave}
       className="isolate overflow-hidden px-5 py-16 text-neutral-900 relative bg-white transition-colors duration-300 dark:bg-[#050505] dark:text-white sm:px-6 sm:py-24 md:px-10 md:py-30 mx-auto border-t border-[#0E1525]/10 dark:border-white/10"
     >
-      {/* Custom CSS (plain CSS so hover works on every device) */}
+      {/* Looping CSS animations (float, ripple, dash, twinkle) */}
       <style>{`
         @keyframes lt-float {
           0%, 100% { transform: translateY(0); }
@@ -249,35 +390,23 @@ const LetsTalk = () => {
           animation: lt-float var(--d, 6s) ease-in-out var(--delay, 0s) infinite;
         }
 
-        /* mouse parallax layer */
-        .lt-par {
-          transform: translate3d(
-            calc(var(--mx, 0) * var(--depth, 20) * 1px),
-            calc(var(--my, 0) * var(--depth, 20) * 1px),
-            0
-          );
-          transition: transform 0.35s ease-out;
-        }
-
         .lt-social {
           cursor: pointer;
           -webkit-tap-highlight-color: transparent;
           touch-action: manipulation;
-          transition: transform 0.3s ease, background-color 0.3s ease,
-                      border-color 0.3s ease, color 0.3s ease;
+          transition: background-color 0.3s ease, border-color 0.3s ease,
+                      color 0.3s ease;
         }
         .lt-social:hover,
         .lt-social:focus-visible {
           background-color: var(--c) !important;
           border-color: var(--c) !important;
           color: #fff !important;
-          transform: scale(1.18) rotate(-8deg);
         }
         .lt-social:focus-visible {
           outline: 2px solid var(--c);
           outline-offset: 3px;
         }
-        .lt-social:active { transform: scale(0.92); }
 
         /* ripple ring */
         @keyframes lt-ripple {
@@ -307,11 +436,7 @@ const LetsTalk = () => {
 
         @media (prefers-reduced-motion: reduce) {
           .lt-float, .lt-ripple, .lt-dash, .lt-dash-rev, .lt-twinkle { animation: none; }
-          .lt-par { transform: none; transition: none; }
-          .lt-social, .lt-social:hover, .lt-social:focus-visible, .lt-social:active {
-            transition: none;
-            transform: none;
-          }
+          .lt-social { transition: none; }
         }
       `}</style>
 
@@ -322,15 +447,22 @@ const LetsTalk = () => {
       />
 
       {/* Center glow (slow breathing) */}
-      <div
+      <motion.div
         aria-hidden
-        className="absolute left-1/2 top-1/3 -z-10 h-105 w-105 -translate-x-1/2 rounded-full bg-[#2a7fa3]/25 blur-[120px] motion-safe:animate-pulse dark:bg-[#2a7fa3]/35 sm:h-140 sm:w-140"
-        style={{ animationDuration: "6s" }}
+        style={{ x: "-50%" }}
+        animate={
+          reduceMotion
+            ? undefined
+            : { scale: [1, 1.12, 1], opacity: [0.75, 1, 0.75] }
+        }
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute left-1/2 top-1/3 -z-10 h-105 w-105 rounded-full bg-[#2a7fa3]/25 blur-[120px] dark:bg-[#2a7fa3]/35 sm:h-140 sm:w-140"
       />
 
-      {/* Dashed orbit arcs that slowly flow (desktop only) */}
-      <svg
+      {/* Dashed orbit arcs that fade in, then slowly flow (desktop only) */}
+      <motion.svg
         aria-hidden
+        variants={reduceMotion ? still : orbitVariants}
         viewBox="0 0 280 420"
         fill="none"
         className="pointer-events-none absolute -left-24 top-[8%] -z-10 hidden h-[420px] w-[280px] text-[#2a7fa3] lg:block"
@@ -346,9 +478,10 @@ const LetsTalk = () => {
           strokeDasharray="4 10"
           className="lt-dash"
         />
-      </svg>
-      <svg
+      </motion.svg>
+      <motion.svg
         aria-hidden
+        variants={reduceMotion ? still : orbitVariants}
         viewBox="0 0 280 400"
         fill="none"
         className="pointer-events-none absolute -right-28 top-[18%] -z-10 hidden h-[400px] w-[280px] text-[#2a7fa3] lg:block"
@@ -364,7 +497,7 @@ const LetsTalk = () => {
           strokeDasharray="4 10"
           className="lt-dash-rev"
         />
-      </svg>
+      </motion.svg>
 
       {/* Twinkling dots (desktop only) */}
       {sparkles.map((d, i) => (
@@ -376,87 +509,101 @@ const LetsTalk = () => {
         />
       ))}
 
-      {/* Floating social icons around the heading (desktop only)
-          layers: entrance -> mouse parallax -> float -> hover */}
+      {/* Floating social icons around the heading (desktop only) */}
       {socials.map((s, i) => (
-        <div
+        <FloatingSocial
           key={s.label}
-          className={`absolute z-10 hidden transition-all duration-700 ease-out motion-reduce:transition-none lg:block ${s.pos} ${
-            inView ? "scale-100 opacity-100" : "scale-75 opacity-0"
-          }`}
-          style={{ transitionDelay: inView ? `${200 + i * 120}ms` : "0ms" }}
-        >
-          <div
-            className="lt-par"
-            style={{ "--depth": s.depth } as CSSProperties}
-          >
-            <div
-              className="lt-float"
-              style={
-                {
-                  "--d": `${5 + (i % 3)}s`,
-                  "--delay": `${i * 0.5}s`,
-                  "--amp": s.amp,
-                } as CSSProperties
-              }
-            >
-              <SocialButton s={s} size={s.size} rippleDelay={`${i * 0.6}s`} />
-            </div>
-          </div>
-        </div>
+          s={s}
+          index={i}
+          mx={mx}
+          my={my}
+          reduceMotion={reduceMotion}
+        />
       ))}
 
       <div className="mx-auto max-w-5xl">
         {/* Heading */}
-        <div className={`text-left sm:text-center ${reveal(inView)}`}>
-          <h2 className="text-3xl font-bold leading-[1.1] tracking-tight sm:text-4xl lg:text-5xl">
-            Let&apos;s Build Something
-            <br />
-            <span className="bg-gradient-to-r from-[#15919B] to-[#2a7fa3] bg-clip-text text-transparent dark:from-teal-300 dark:to-[#4aa3c7]">
-              Great Together.
+        <div className="text-left sm:text-center">
+          <motion.h2
+            variants={reduceMotion ? still : headingVariants}
+            className="text-3xl font-bold leading-[1.1] tracking-tight sm:text-4xl lg:text-5xl"
+          >
+            <span className="block overflow-hidden pb-1.5">
+              <motion.span
+                variants={reduceMotion ? still : lineVariants}
+                className="block"
+              >
+                Let&apos;s Build Something
+              </motion.span>
             </span>
-          </h2>
+            <span className="block overflow-hidden pb-1.5">
+              <motion.span
+                variants={reduceMotion ? still : lineVariants}
+                className="block bg-gradient-to-r from-[#15919B] to-[#2a7fa3] bg-clip-text text-transparent dark:from-teal-300 dark:to-[#4aa3c7]"
+              >
+                Great Together.
+              </motion.span>
+            </span>
+          </motion.h2>
 
-          <p className="mx-auto mt-6 max-w-xl text-sm leading-relaxed text-neutral-600 dark:text-white/70 sm:text-base lg:text-lg">
+          <motion.p
+            variants={reduceMotion ? still : fadeUp}
+            className="mx-auto mt-6 max-w-xl text-sm leading-relaxed text-neutral-600 dark:text-white/70 sm:text-base lg:text-lg"
+          >
             Have a project, idea, or opportunity in mind?
             <br className="hidden sm:block" /> Let&apos;s turn it into something
             meaningful, modern &amp; scalable.
-          </p>
+          </motion.p>
         </div>
 
         {/* CTA */}
-        <div
-          className={`mt-8 flex sm:justify-center ${reveal(inView)}`}
-          style={{ transitionDelay: inView ? "200ms" : "0ms" }}
+        <motion.div
+          variants={reduceMotion ? still : ctaVariants}
+          className="mt-8 flex sm:justify-center"
         >
-          <Link
-            to="contact"
-            className="group relative inline-flex w-full items-center justify-center gap-3 overflow-hidden rounded-full bg-gradient-to-r from-[#15919B] to-[#2a7fa3] px-9 py-3.5 text-base font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2a7fa3] motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:w-auto sm:px-10 sm:py-4 sm:text-lg"
+          <motion.div
+            whileHover={reduceMotion ? undefined : { y: -3, scale: 1.03 }}
+            whileTap={reduceMotion ? undefined : { scale: 0.97 }}
+            transition={{ type: "spring", stiffness: 400, damping: 18 }}
+            className="relative w-full sm:w-auto"
           >
-            {/* Shine sweep */}
-            <span
-              aria-hidden
-              className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 -skew-x-12 bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[300%]"
-            />
-            <span className="relative">Let&apos;s Talk</span>
-            <ArrowRight className="relative h-5 w-5 transition-transform duration-300 group-hover:translate-x-1.5" />
-          </Link>
-        </div>
+            {/* Pulsing halo behind the button */}
+            {!reduceMotion && (
+              <motion.span
+                aria-hidden
+                animate={{ opacity: [0.35, 0, 0.35], scale: [1, 1.18, 1] }}
+                transition={{
+                  duration: 3.2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className="pointer-events-none absolute inset-0 -z-10 rounded-full bg-[#2a7fa3]/40 blur-lg"
+              />
+            )}
+
+            <Link
+              to="contact"
+              className="group relative inline-flex w-full items-center justify-center gap-3 overflow-hidden rounded-full bg-gradient-to-r from-[#15919B] to-[#2a7fa3] px-9 py-3.5 text-base font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2a7fa3] sm:w-auto sm:px-10 sm:py-4 sm:text-lg"
+            >
+              {/* Shine sweep */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 -skew-x-12 bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[300%] motion-reduce:hidden"
+              />
+              <span className="relative">Let&apos;s Talk</span>
+              <ArrowRight className="relative h-5 w-5 transition-transform duration-300 group-hover:translate-x-1.5 motion-reduce:transition-none" />
+            </Link>
+          </motion.div>
+        </motion.div>
 
         {/* Mobile + tablet: icons in a wave (every 2nd one sits lower).
             Desktop uses the floating ones above. */}
         <div className="mx-auto mt-10 grid max-w-sm grid-cols-6 gap-2.5 pb-6 sm:max-w-md sm:gap-4 lg:hidden">
           {socials.map((s, i) => (
             <div key={s.label} className="even:mt-5 sm:even:mt-6">
-              <div
-                className={`transition-all duration-700 ease-out motion-reduce:transition-none ${
-                  inView
-                    ? "translate-y-0 scale-100 opacity-100"
-                    : "translate-y-6 scale-75 opacity-0"
-                }`}
-                style={{
-                  transitionDelay: inView ? `${400 + i * 100}ms` : "0ms",
-                }}
+              <motion.div
+                custom={i}
+                variants={reduceMotion ? still : mobileIconVariants}
               >
                 <div
                   className="lt-float"
@@ -472,14 +619,15 @@ const LetsTalk = () => {
                     s={s}
                     size="aspect-square w-full"
                     rippleDelay={`${i * 0.5}s`}
+                    reduceMotion={reduceMotion}
                   />
                 </div>
-              </div>
+              </motion.div>
             </div>
           ))}
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 };
 
