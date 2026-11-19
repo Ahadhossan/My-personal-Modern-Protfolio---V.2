@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import type { PointerEvent } from "react";
 import { MapPin, CalendarDays } from "lucide-react";
-
 import {
   motion,
+  useInView,
   useMotionTemplate,
   useMotionValue,
   useMotionValueEvent,
@@ -20,6 +20,7 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 
 /* ---------- Variants ---------- */
 
+// Reduced-motion fallback: everything is simply visible
 const still: Variants = {
   hidden: { opacity: 1 },
   visible: { opacity: 1 },
@@ -59,6 +60,7 @@ const dotVariants: Variants = {
   },
 };
 
+// One timeline row: node pops first, then the card slides in
 const itemVariants: Variants = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.15 } },
@@ -90,11 +92,7 @@ const cardVariants: Variants = {
 
 const cardItem: Variants = {
   hidden: { opacity: 0, y: 14 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: EASE },
-  },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } },
 };
 
 const pointsList: Variants = {
@@ -104,11 +102,7 @@ const pointsList: Variants = {
 
 const pointItem: Variants = {
   hidden: { opacity: 0, x: -12 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    transition: { duration: 0.45, ease: EASE },
-  },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.45, ease: EASE } },
 };
 
 const bulletDot: Variants = {
@@ -119,13 +113,15 @@ const bulletDot: Variants = {
   },
 };
 
-/* ---------- Connecting Line ---------- */
+/* ---------- Connecting line: fill follows scroll ---------- */
 
 const TimelineLine: React.FC<{ reduceMotion: boolean }> = ({
   reduceMotion,
 }) => {
   const lineRef = useRef<HTMLSpanElement | null>(null);
 
+  // 0 when the line's top reaches the reading line (60% down the viewport),
+  // 1 when its bottom reaches it
   const { scrollYProgress } = useScroll({
     target: lineRef,
     offset: ["start 0.6", "end 0.6"],
@@ -151,12 +147,12 @@ const TimelineLine: React.FC<{ reduceMotion: boolean }> = ({
   );
 };
 
-/* ---------- Timeline Node ---------- */
+/* ---------- Timeline node: lights up when the reading line passes ---------- */
 
-const TimelineNode: React.FC<{
-  current?: boolean;
-  reduceMotion: boolean;
-}> = ({ current, reduceMotion }) => {
+const TimelineNode: React.FC<{ current?: boolean; reduceMotion: boolean }> = ({
+  current,
+  reduceMotion,
+}) => {
   const nodeRef = useRef<HTMLSpanElement | null>(null);
   const [active, setActive] = useState(reduceMotion);
 
@@ -169,6 +165,7 @@ const TimelineNode: React.FC<{
     if (!reduceMotion) setActive(v > 0);
   });
 
+  // Correct the starting state (e.g. page reloaded mid-scroll)
   useEffect(() => {
     if (reduceMotion) {
       setActive(true);
@@ -188,6 +185,7 @@ const TimelineNode: React.FC<{
           : "border-[#42464e]/30 bg-white dark:border-white/25 dark:bg-slate-900"
       }`}
     >
+      {/* One-shot ring burst when the node turns on */}
       {active && !reduceMotion && (
         <motion.span
           aria-hidden="true"
@@ -212,14 +210,13 @@ const TimelineItem: React.FC<{
   isLast: boolean;
   reduceMotion: boolean;
 }> = ({ job, isLast, reduceMotion }) => {
+  // Cursor spotlight (mouse only)
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
-
   const spotlight = useMotionTemplate`radial-gradient(360px circle at ${mx}px ${my}px, rgba(42,127,163,0.12), transparent 70%)`;
 
   const handleMove = (e: PointerEvent<HTMLDivElement>) => {
     if (reduceMotion || e.pointerType !== "mouse") return;
-
     const rect = e.currentTarget.getBoundingClientRect();
     mx.set(e.clientX - rect.left);
     my.set(e.clientY - rect.top);
@@ -233,8 +230,10 @@ const TimelineItem: React.FC<{
       viewport={{ once: true, amount: 0.15 }}
       className="group relative grid grid-cols-[auto_1fr] gap-x-3 pb-8 last:pb-0 sm:gap-x-8 sm:pb-12"
     >
+      {/* Connecting Line */}
       {!isLast && <TimelineLine reduceMotion={reduceMotion} />}
 
+      {/* Timeline Node */}
       <motion.div
         variants={reduceMotion ? still : nodeWrapVariants}
         className="flex flex-col items-center pt-5 sm:pt-6"
@@ -242,6 +241,7 @@ const TimelineItem: React.FC<{
         <TimelineNode current={job.current} reduceMotion={reduceMotion} />
       </motion.div>
 
+      {/* Content Card */}
       <motion.div
         variants={reduceMotion ? still : cardVariants}
         onPointerMove={handleMove}
@@ -255,6 +255,7 @@ const TimelineItem: React.FC<{
         }
         className="relative min-w-0 cursor-pointer overflow-hidden rounded-xl border border-[#42464e]/40 bg-white/70 px-4 py-4 shadow-[0_8px_24px_-12px_rgba(14,21,37,0.15)] backdrop-blur-sm transition-[border-color,background-color,box-shadow] duration-300 hover:border-[#15919B] group-hover:shadow-[0_16px_40px_-12px_rgba(42,127,163,0.35)] dark:border-white/10 dark:bg-slate-900/70 dark:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)] sm:px-6 sm:py-5"
       >
+        {/* Cursor spotlight */}
         {!reduceMotion && (
           <motion.span
             aria-hidden="true"
@@ -263,11 +264,13 @@ const TimelineItem: React.FC<{
           />
         )}
 
+        {/* Bottom Accent Border */}
         <span
           aria-hidden="true"
           className="absolute inset-x-0 bottom-0 h-[3px] origin-left scale-x-0 bg-gradient-to-r from-[#2a7fa3] to-[#8fc4dc] transition-transform duration-500 ease-out group-hover:scale-x-100 dark:from-[#5bb8e0] dark:to-[#2a7fa3]"
         />
 
+        {/* Duration */}
         <motion.div
           variants={reduceMotion ? still : cardItem}
           className="relative flex flex-wrap items-center gap-x-3 gap-y-1"
@@ -291,6 +294,7 @@ const TimelineItem: React.FC<{
           )}
         </motion.div>
 
+        {/* Role */}
         <motion.h3
           variants={reduceMotion ? still : cardItem}
           className="relative mt-2 font-space text-lg font-semibold text-[#584e4e] transition-colors duration-300 group-hover:text-[#2a7fa3] dark:text-slate-100 dark:group-hover:text-[#5bb8e0] sm:text-xl"
@@ -298,6 +302,7 @@ const TimelineItem: React.FC<{
           {job.role}
         </motion.h3>
 
+        {/* Company */}
         <motion.p
           variants={reduceMotion ? still : cardItem}
           className="relative mt-1 text-sm font-medium text-[#2a7fa3] dark:text-[#5bb8e0]"
@@ -305,6 +310,7 @@ const TimelineItem: React.FC<{
           {job.company}
         </motion.p>
 
+        {/* Location */}
         <motion.p
           variants={reduceMotion ? still : cardItem}
           className="relative mt-1 flex items-center gap-1.5 text-xs text-[#8C93A0] dark:text-slate-400 sm:text-sm"
@@ -313,6 +319,7 @@ const TimelineItem: React.FC<{
           {job.location}
         </motion.p>
 
+        {/* Responsibilities */}
         <motion.ul
           variants={reduceMotion ? still : pointsList}
           className="relative mt-4 space-y-2.5"
@@ -336,6 +343,75 @@ const TimelineItem: React.FC<{
   );
 };
 
+/* ---------- Animated top border (replaces the static border-t) ---------- */
+
+const AnimatedBorder: React.FC<{ reduceMotion: boolean }> = ({
+  reduceMotion,
+}) => {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const inView = useInView(ref, { once: true, margin: "0px 0px -10% 0px" });
+  const on = reduceMotion || inView;
+
+  return (
+    <div
+      ref={ref}
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-x-0 top-0 h-[2px]"
+    >
+      {/* Faint static track */}
+      <span className="absolute inset-x-0 top-0 h-px bg-[#42464e]/10 dark:bg-white/10" />
+
+      {/* Glowing line that draws left to right and fades toward the end */}
+      <motion.span
+        initial={{ scaleX: reduceMotion ? 1 : 0 }}
+        animate={{ scaleX: on ? 1 : 0 }}
+        transition={{ duration: 1.4, ease: EASE }}
+        style={{ originX: 0 }}
+        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-[#2a7fa3] via-[#5bb8e0]/70 to-transparent shadow-[0_0_12px_rgba(42,127,163,0.6)]"
+      />
+
+      {!reduceMotion && (
+        <>
+          {/* Glowing head that leads the line */}
+          <motion.span
+            initial={{ left: "0%", opacity: 0 }}
+            animate={
+              on
+                ? { left: "100%", opacity: [0, 1, 1, 0] }
+                : { left: "0%", opacity: 0 }
+            }
+            transition={{
+              duration: 1.4,
+              ease: EASE,
+              opacity: { duration: 1.4, times: [0, 0.1, 0.85, 1] },
+            }}
+            style={{ y: "-50%" }}
+            className="absolute top-0 -ml-[3px] h-1.5 w-1.5 rounded-full bg-[#2a7fa3] shadow-[0_0_10px_3px_rgba(42,127,163,0.7)] dark:bg-[#5bb8e0] dark:shadow-[0_0_10px_3px_rgba(91,184,224,0.7)]"
+          />
+
+          {/* Shine that keeps passing along the line */}
+          <motion.span
+            initial={{ left: "-10%", opacity: 0 }}
+            animate={
+              on
+                ? { left: ["-10%", "100%"], opacity: [0, 1, 1, 0] }
+                : { left: "-10%", opacity: 0 }
+            }
+            transition={{
+              duration: 2.4,
+              ease: "easeInOut",
+              repeat: Infinity,
+              repeatDelay: 4,
+              delay: 1.8,
+            }}
+            className="absolute top-0 -ml-12 h-px w-24 bg-gradient-to-r from-transparent via-[#2a7fa3] to-transparent dark:via-[#5bb8e0]"
+          />
+        </>
+      )}
+    </div>
+  );
+};
+
 /* ---------- Internship Section ---------- */
 
 const Internship: React.FC = () => {
@@ -348,7 +424,10 @@ const Internship: React.FC = () => {
       className="relative isolate w-full bg-white transition-colors duration-300 dark:bg-[#050505]"
     >
       {/* Full-width background with centered content */}
-      <div className="mx-auto w-full max-w-7xl border-t border-[#42464e]/10 dark:border-white/10 transition-colors duration-300 px-5 py-20 sm:px-6 sm:py-24 md:px-10 md:py-30">
+      <div className="relative mx-auto w-full max-w-7xl px-5 py-20 transition-colors duration-300 sm:px-6 sm:py-24 md:px-10 md:py-30">
+        {/* Top border: glowing line draws itself, then a shine keeps passing */}
+        <AnimatedBorder reduceMotion={reduceMotion} />
+
         {/* Header */}
         <motion.div
           variants={reduceMotion ? still : headerVariants}
@@ -377,7 +456,6 @@ const Internship: React.FC = () => {
               style={{ originX: 0 }}
               className="block h-[3px] w-[90px] rounded-sm bg-gradient-to-r from-[#8fc4dc] to-[#487081] dark:from-[#5bb8e0] dark:to-[#2a7fa3]"
             />
-
             <motion.b
               variants={reduceMotion ? still : dotVariants}
               className="h-1.5 w-1.5 rounded-full bg-[#2a7fa3] dark:bg-[#5bb8e0]"
