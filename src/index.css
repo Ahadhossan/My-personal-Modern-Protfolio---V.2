@@ -169,8 +169,9 @@ html {
   scroll-padding-top: 90px;
 }
 
+/* clip (not hidden) so body does not become a second scroll container */
 body {
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* Custom scrollbar */
@@ -192,17 +193,7 @@ body {
   background: #87c9e6;
 }
 
-/* Firefox */
-
 * {
   scrollbar-width: thin;
   scrollbar-color: #2a7fa3 transparent;
-}
-
-/* Respect accessibility settings */
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
 }

@@ -12,6 +12,7 @@
 // import {
 //   motion,
 //   AnimatePresence,
+//   useInView,
 //   useReducedMotion,
 //   type Variants,
 // } from "framer-motion";
@@ -369,6 +370,125 @@
 //   "absolute inset-0 rounded-full bg-[#15919B]/10 shadow-[0_2px_6px_rgba(21,145,155,0.25)] dark:bg-teal-400/15";
 
 // // ============================================================
+// // ANIMATED DIVIDER (replaces the static border between the two columns)
+// // mobile / tablet: horizontal line under the left block, draws left -> right
+// // desktop (lg):    vertical line on its right edge, draws top -> bottom
+// // ============================================================
+
+// const DividerLine: React.FC<{
+//   vertical: boolean;
+//   on: boolean;
+//   reduceMotion: boolean;
+// }> = ({ vertical, on, reduceMotion }) => (
+//   <>
+//     {/* Faint static track */}
+//     <span className="absolute inset-0 bg-slate-200 dark:bg-slate-800" />
+
+//     {/* Glowing line that draws itself and fades out toward the end */}
+//     <motion.span
+//       initial={
+//         vertical
+//           ? { scaleY: reduceMotion ? 1 : 0 }
+//           : { scaleX: reduceMotion ? 1 : 0 }
+//       }
+//       animate={vertical ? { scaleY: on ? 1 : 0 } : { scaleX: on ? 1 : 0 }}
+//       transition={{ duration: 1.4, ease: EASE }}
+//       style={{ originX: 0, originY: 0 }}
+//       className={`absolute inset-0 shadow-[0_0_12px_rgba(21,145,155,0.6)] ${
+//         vertical
+//           ? "bg-gradient-to-b from-[#15919B] via-[#2a7fa3]/70 to-transparent"
+//           : "bg-gradient-to-r from-[#15919B] via-[#2a7fa3]/70 to-transparent"
+//       }`}
+//     />
+
+//     {!reduceMotion && (
+//       <>
+//         {/* Glowing head that leads the line */}
+//         <motion.span
+//           initial={
+//             vertical ? { top: "0%", opacity: 0 } : { left: "0%", opacity: 0 }
+//           }
+//           animate={
+//             on
+//               ? vertical
+//                 ? { top: "100%", opacity: [0, 1, 1, 0] }
+//                 : { left: "100%", opacity: [0, 1, 1, 0] }
+//               : vertical
+//                 ? { top: "0%", opacity: 0 }
+//                 : { left: "0%", opacity: 0 }
+//           }
+//           transition={{
+//             duration: 1.4,
+//             ease: EASE,
+//             opacity: { duration: 1.4, times: [0, 0.1, 0.85, 1] },
+//           }}
+//           style={vertical ? { x: "-50%" } : { y: "-50%" }}
+//           className={`absolute h-1.5 w-1.5 rounded-full bg-[#15919B] shadow-[0_0_10px_3px_rgba(21,145,155,0.7)] ${
+//             vertical ? "left-1/2 -mt-[3px]" : "top-1/2 -ml-[3px]"
+//           }`}
+//         />
+
+//         {/* Shine that keeps passing along the line */}
+//         <motion.span
+//           initial={
+//             vertical
+//               ? { top: "-15%", opacity: 0 }
+//               : { left: "-15%", opacity: 0 }
+//           }
+//           animate={
+//             on
+//               ? vertical
+//                 ? { top: ["-15%", "100%"], opacity: [0, 1, 1, 0] }
+//                 : { left: ["-15%", "100%"], opacity: [0, 1, 1, 0] }
+//               : vertical
+//                 ? { top: "-15%", opacity: 0 }
+//                 : { left: "-15%", opacity: 0 }
+//           }
+//           transition={{
+//             duration: 2.6,
+//             ease: "easeInOut",
+//             repeat: Infinity,
+//             repeatDelay: 4,
+//             delay: 1.8,
+//           }}
+//           className={`absolute ${
+//             vertical
+//               ? "left-0 -mt-12 h-24 w-px bg-gradient-to-b from-transparent via-[#15919B] to-transparent"
+//               : "top-0 -ml-12 h-px w-24 bg-gradient-to-r from-transparent via-[#15919B] to-transparent"
+//           }`}
+//         />
+//       </>
+//     )}
+//   </>
+// );
+
+// const AnimatedDivider: React.FC<{ reduceMotion: boolean }> = ({
+//   reduceMotion,
+// }) => {
+//   const ref = useRef<HTMLDivElement | null>(null);
+//   const inView = useInView(ref, { once: true, margin: "0px 0px -10% 0px" });
+//   const on = reduceMotion || inView;
+
+//   return (
+//     <div
+//       ref={ref}
+//       aria-hidden="true"
+//       className="pointer-events-none absolute inset-0"
+//     >
+//       {/* Mobile + tablet: horizontal line at the bottom */}
+//       <div className="absolute inset-x-0 bottom-0 h-px lg:hidden">
+//         <DividerLine vertical={false} on={on} reduceMotion={reduceMotion} />
+//       </div>
+
+//       {/* Desktop: vertical line on the right edge */}
+//       <div className="absolute inset-y-0 right-0 hidden w-px lg:block">
+//         <DividerLine vertical on={on} reduceMotion={reduceMotion} />
+//       </div>
+//     </div>
+//   );
+// };
+
+// // ============================================================
 // // CONTACT PAGE
 // // ============================================================
 
@@ -545,8 +665,11 @@
 //           initial="hidden"
 //           whileInView="visible"
 //           viewport={{ once: true, amount: 0.12 }}
-//           className="flex min-w-0 flex-col justify-between gap-10 border-b border-slate-200 px-4 py-12 dark:border-slate-800 sm:px-6 sm:py-16 md:px-8 md:py-20 lg:col-span-2 lg:gap-12 lg:border-b-0 lg:border-r dark:lg:border-r-slate-800"
+//           className="relative flex min-w-0 flex-col justify-between gap-10 px-4 py-12 sm:px-6 sm:py-16 md:px-8 md:py-20 lg:col-span-2 lg:gap-12"
 //         >
+//           {/* Divider: replaces the old static border-b / lg:border-r */}
+//           <AnimatedDivider reduceMotion={reduceMotion} />
+
 //           {/* INTRO */}
 //           <div>
 //             <h1
@@ -1751,7 +1874,7 @@ const Contact = ({ onBack }: { onBack?: () => void }) => {
   // ==========================================================
 
   return (
-    <main className="mt-16 min-h-[calc(100vh-4rem)] w-full overflow-x-hidden bg-white dark:bg-[#050505]">
+    <main className="mt-16 min-h-[calc(100vh-4rem)] w-full overflow-x-clip bg-white dark:bg-[#050505]">
       {/* Mobile + tablet: stacked. Desktop (lg): 2 / 3 split. */}
       <div className="mx-auto grid min-h-[inherit] w-full max-w-7xl grid-cols-1 lg:grid-cols-5">
         {/* ====================================================
@@ -2076,7 +2199,7 @@ const Contact = ({ onBack }: { onBack?: () => void }) => {
                     value={form.message}
                     onChange={handleChange("message")}
                     placeholder="What are you working on?"
-                    className={`${fieldClasses} min-h-[140px] resize-none`}
+                    className={`${fieldClasses} min-h-[140px] resize-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}
                   />
                 </motion.div>
 
