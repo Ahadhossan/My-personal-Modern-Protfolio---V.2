@@ -1,71 +1,21 @@
+
 "use client";
 
 import type { MouseEvent } from "react";
+
 import { motion, useReducedMotion } from "framer-motion";
-import {
-  GraduationCap,
-  BookOpen,
-  School,
-  MapPin,
-  type LucideIcon,
-} from "lucide-react";
+import { MapPin } from "lucide-react";
 
-/**
- * Fonts:
- * display: Bricolage Grotesque
- * body: Hanken Grotesk
- * space: Keep this font key defined if used elsewhere in your project.
- */
+import { educationSteps } from "../../Data/Education";
 
-interface Step {
-  year: string;
-  degree: string;
-  field: string;
-  institute: string;
-  tag: string;
-  icon: LucideIcon;
-  height: string;
-  featured?: boolean;
-}
-
-const STEPS: Step[] = [
-  {
-    year: "2017",
-    degree: "Secondary School Certificate (SSC)",
-    field: "Science",
-    institute: "Hajigonj Amin Memorial High School",
-    tag: "Secondary education",
-    icon: School,
-    height: "lg:min-h-[280px]",
-  },
-  {
-    year: "2019",
-    degree: "Higher Secondary Certificate (HSC)",
-    field: "Science",
-    institute: "Hajigonj Model Govt. College",
-    tag: "Higher secondary",
-    icon: BookOpen,
-    height: "lg:min-h-[340px]",
-  },
-  {
-    year: "2022",
-    degree: "Diploma in Engineering",
-    field: "Computer Technology (CMT)",
-    institute: "Chandpur Polytechnic Institute",
-    tag: "Where tech began",
-    icon: GraduationCap,
-    height: "lg:min-h-[400px]",
-    featured: true,
-  },
-];
-
-// Updates CSS variables so the spotlight follows the cursor.
 const handleMouseMove = (e: MouseEvent<HTMLElement>) => {
   const rect = e.currentTarget.getBoundingClientRect();
 
   e.currentTarget.style.setProperty("--x", `${e.clientX - rect.left}px`);
   e.currentTarget.style.setProperty("--y", `${e.clientY - rect.top}px`);
 };
+
+/* ---------- Graduation Cap Illustration ---------- */
 
 function CapIllustration({ reduce }: { reduce: boolean }) {
   return (
@@ -117,6 +67,7 @@ function CapIllustration({ reduce }: { reduce: boolean }) {
           <text x="14" y="34" transform="rotate(-6 14 34)">
             Learning builds
           </text>
+
           <text x="24" y="60" transform="rotate(-6 24 60)">
             a better tomorrow
           </text>
@@ -143,24 +94,30 @@ function CapIllustration({ reduce }: { reduce: boolean }) {
   );
 }
 
+/* ---------- Education Section ---------- */
+
 export default function Education() {
   const reduce = useReducedMotion();
 
   return (
     <section
       id="education"
-      className="relative isolate overflow-hidden bg-white transition-colors duration-300 dark:bg-[#050505] "
+      className="relative isolate w-full overflow-hidden border-t border-[#0E1525]/10 bg-white transition-colors duration-300 dark:border-white/10 dark:bg-[#050505]"
     >
-      <div className="mx-auto max-w-7xl border-t border-[#0E1525]/10 transition-colors duration-300 dark:border-white/10 px-5 py-20  sm:px-6 sm:py-24 md:px-10 md:py-30">
-        {/* Heading + illustration */}
+      <div className="mx-auto w-full max-w-7xl px-5 py-20 sm:px-6 sm:py-24 md:px-10 md:py-30">
+        {/* Heading + Illustration */}
         <div className="mb-8 grid items-center gap-5 sm:mb-12 lg:mb-14 lg:grid-cols-2 lg:gap-10">
           <div className="space-y-3">
             <h2 className="text-[28px] font-semibold leading-tight text-[#0F2E33] transition-colors duration-300 dark:text-white sm:text-[34px] lg:text-[40px]">
               My Education
             </h2>
 
-            <div className="mt-4 flex items-start gap-1.5" aria-hidden="true">
+            <div
+              className="mt-4 flex items-start gap-1.5"
+              aria-hidden="true"
+            >
               <span className="block h-[3px] w-[160px] rounded-sm bg-gradient-to-r from-[#8fc4dc] to-[#487081]" />
+
               <span className="block h-1.5 w-1.5 rounded-full bg-[#2a7fa3]" />
             </div>
 
@@ -173,9 +130,9 @@ export default function Education() {
           <CapIllustration reduce={!!reduce} />
         </div>
 
-        {/* Responsive layout: 1 column → 2 columns → staircase */}
-        <ol className="grid items-end gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 cursor-pointer">
-          {STEPS.map((s, i) => {
+        {/* Education Cards */}
+        <ol className="grid cursor-pointer items-end gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+          {educationSteps.map((s, i) => {
             const Icon = s.icon;
             const f = !!s.featured;
 
@@ -199,18 +156,7 @@ export default function Education() {
                       : "border-[#0E1525]/10 bg-white text-[#0E1525] shadow-[0_8px_24px_-12px_rgba(14,21,37,0.15)] hover:border-[#15919B] hover:shadow-[0_16px_40px_-12px_rgba(42,127,163,0.25)] dark:border-white/[0.09] dark:bg-gradient-to-br dark:from-[#111c27] dark:via-[#0b121b] dark:to-[#090d13] dark:text-slate-100 dark:shadow-[0_10px_35px_-18px_rgba(0,0,0,0.8)] dark:hover:border-[#15919B] dark:hover:shadow-[0_18px_45px_-15px_rgba(42,127,163,0.2)]"
                   }`}
               >
-                {/* Cursor-following spotlight */}
-                {/* <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 -z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                  style={{
-                    background: f
-                      ? "radial-gradient(320px circle at var(--x, 50%) var(--y, 50%), rgba(42,127,163,0.35), transparent 70%)"
-                      : "radial-gradient(320px circle at var(--x, 50%) var(--y, 50%), rgba(21,145,155,0.19), transparent 70%)",
-                  }}
-                /> */}
-
-                {/* Accent glow */}
+                {/* Accent Glow */}
                 <span
                   aria-hidden="true"
                   className={`pointer-events-none absolute -right-14 -top-14 size-44 rounded-full blur-3xl transition-opacity duration-500 ${
@@ -220,7 +166,7 @@ export default function Education() {
                   }`}
                 />
 
-                {/* Year + icon */}
+                {/* Year + Icon */}
                 <div className="relative flex items-start justify-between gap-3">
                   <span
                     className={`font-display text-5xl font-extrabold leading-none tracking-[-0.05em] transition-colors duration-300 sm:text-6xl ${
@@ -247,7 +193,7 @@ export default function Education() {
                   </span>
                 </div>
 
-                {/* Education details */}
+                {/* Education Details */}
                 <div className="relative space-y-3">
                   <p
                     className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${
@@ -294,7 +240,9 @@ export default function Education() {
                       aria-hidden="true"
                     />
 
-                    <span className="min-w-0 break-words">{s.institute}</span>
+                    <span className="min-w-0 break-words">
+                      {s.institute}
+                    </span>
                   </p>
                 </div>
               </motion.li>
